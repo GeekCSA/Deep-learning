@@ -2,7 +2,7 @@
 
 A parasitron is a single neuron that is constructed as follows:
 
-# ![diagram](https://github.com/GeekCSA/Deep-learning/blob/master/Perceptron%20Algorithm/Single-Perceptron.png?raw=true "Title")
+# ![diagram](https://github.com/GeekCSA/Deep-learning/blob/master/Perceptron%20Algorithm/Single-Perceptron.png?raw=true "Perceptron")
 
 1. The input is bits of '0' or '1'
 2. Each input bit has a number that represents the weight of the input on the same bit.
