@@ -3,11 +3,12 @@
 A parasitron is a single neuron that is constructed as follows:
 
 # ![diagram](https://github.com/GeekCSA/Deep-learning/blob/master/Perceptron%20Algorithm/Single-Perceptron.png?raw=true "Perceptron")
+###### from https://pythonmachinelearning.pro/perceptrons-the-first-neural-networks/
 
 1. The input is bits of '0' or '1'
 2. Each input bit has a number that represents the weight of the input on the same bit.
-3. In sum, we sum the product W_i * X_i when N = 0.
-4. If the above amount has passed a certain threshold then another output '1' will be output '0'.
+3. In sum, we sum the product W_i * X_i when 1 <= i <= n. (equals to z)
+4. In activation function, if the above amount has passed a certain threshold then another output '1' will be output '0'.
 
 If we passed the threshold then the input should be received otherwise it should not be accepted. In order for the neuron to produce only 1 on the inputs to be obtained, the weights W_1 to W_n should be in the correct values.
 

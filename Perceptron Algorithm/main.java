@@ -1,16 +1,12 @@
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-
+/**
+ * @author Moshe, Ehud and Reut
+ * @since 13/4/2018
+ */
 public class main {
 
 	/**
@@ -18,62 +14,38 @@ public class main {
 	 */
 	public static void main(String[] args) {
 
+		//The source folder of the data
 		File folder = new File("src/Latters/");
+		//Array of the files in the source folder
 		File[] listOfFiles = folder.listFiles();
-		
-		ArrayList<String> shmonim = new ArrayList<>();//80%
-		ArrayList<String> esrim = new ArrayList<>();//20%
-		
-		int[] arr = {20,80};
-		
+
+		//These arrays hold the rows that return files by percentage 
+		ArrayList<String> eighty = new ArrayList<>();//80%
+		ArrayList<String> twenty = new ArrayList<>();//20%
+
+		//This array preserves the desired distribution of the number of rows per file in percentages
+		int[] percentages = {20,80};
+
 		FileModification fm;
-		
-		
+
+		//Go through each of the data files to divide the desired shape
 		for (int i = 0; i < listOfFiles.length; i++) {
 			try {
-				fm = new FileModification(listOfFiles[i].getAbsolutePath());
+				fm = new FileModification(listOfFiles[i].getAbsolutePath());//Holding a specific file
 				System.out.println(fm.numOfLinesInFile());
-				ArrayList<String>[] temp = fm.splitRandomly(arr, 1);
-				//			for (int i = 0; i < temp.length; i++) {
-				shmonim.addAll(temp[1]);
-				esrim.addAll(temp[0]);
-				//			}
+
+				//Split the file by percentage.
+				//The 80% of the file is returned in the temp[1] and the 20% of the file is returned in the temp[0]
+				ArrayList<String>[] temp = fm.splitFile(percentages, 1);
+				eighty.addAll(temp[1]);
+				twenty.addAll(temp[0]);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		
-        Collections.shuffle(esrim);
-        Collections.shuffle(shmonim);
-		
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-//		try(FileReader fr = new FileReader("src/Latters/Bet.csv"))
-//		{
-//			BufferedReader br = new BufferedReader(fr);		
-//			System.out.println(br.readLine());
-//			
-//		}
-//		catch (Exception e) {
-//			System.out.println(e);
-//		}
-	}
 
+		//Have to scramble the information so that the letters are not arranged in order but will be messy
+		Collections.shuffle(eighty);
+		Collections.shuffle(twenty);
+	}
 }
