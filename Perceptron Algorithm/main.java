@@ -2,10 +2,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Random;
 
 /**
- * @author Moshe, Ehud and Reut
- * @since 13/4/2018
+ * @author Moshe, Reut
+ * @since 16/4/2018
  */
 public class main {
 
@@ -36,12 +37,13 @@ public class main {
 
 				//Split the file by percentage.
 				//The 80% of the file is returned in the temp[1] and the 20% of the file is returned in the temp[0]
-				ArrayList<String>[] temp = fm.splitFile(percentages, 1);
+				//0% of noise in the data.
+				ArrayList<String>[] temp = fm.splitFile(percentages, 1,60);
 				eighty.addAll(temp[1]);
 				twenty.addAll(temp[0]);
-			} catch (IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
-			}
+			} 
 		}
 
 		//Have to scramble the information so that the letters are not arranged in order but will be messy

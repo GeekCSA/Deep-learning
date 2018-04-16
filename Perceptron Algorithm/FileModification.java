@@ -7,11 +7,12 @@ import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.stream.Stream;
 
 /**
  * @author Moshe
- * @since 4/4/2018
+ * @since 16/4/2018
  */
 public class FileModification {
 
@@ -53,11 +54,17 @@ public class FileModification {
 	 * 
 	 * @param percent - Array preserves the desired distribution of the number of rows per file in percentages.
 	 * @param numOfSkipHeaderLine - Number of title rows that we need to skip and don't read.
+	 * @param noise - Percent of noise to do in the data. (The range is 0 to 100)
 	 * @return - Array of ArrayList<String>. each ArrayList<String> holds rows according to the percentages given to the function.
+	 * @throws Exception The noise is out of range 0 - 100
 	 */
-	public ArrayList<String>[] splitFile(int[] percent,int numOfSkipHeaderLine)
+	public ArrayList<String>[] splitFile(int[] percent,int numOfSkipHeaderLine,int noise) throws Exception
 	{
 		long[] linesForThePercent = null;
+		
+		if (noise < 0 || noise > 100) {
+		    throw new Exception("The noise is out of range 0 - 100");
+		}
 
 		try {//Calculate how many actual rows fit for each percentage
 			linesForThePercent = CalculateLines(percent,numOfLinesInFile(),numOfSkipHeaderLine);
@@ -80,13 +87,14 @@ public class FileModification {
 			for (int i = 0; i < linesForThePercent.length; i++) {
 
 				//Create a file that contain the rows for a specified percent
-				writer = new PrintWriter(getFilePathWithoutName() + "/" + getFileNameWhitoutType() + "_" + i + "." + getFileType(), "UTF-8");
+				writer = new PrintWriter(getFilePathWithoutName() + "/" + getFileNameWhitoutType() + "_" + i + "_With_noise_of_" + noise + "." + getFileType(), "UTF-8");
 				
 				testAndTry[i] = new ArrayList<>();
 
 				for (int j = 0; j < linesForThePercent[i]; j++) {
 					String s = br.readLine();
-					testAndTry[i].add(s);
+					String withNoise = imageNoise(s, noise,",");
+					testAndTry[i].add(withNoise);
 					writer.println(s);
 				}
 				writer.close();
@@ -138,5 +146,38 @@ public class FileModification {
 
 		return retArr;
 	}
+	
+	/**
+	 * The function takes the string of '0' and '1' turns it into an array and makes "noise" according to the required percentages.
+	 * For example, if the number is 10 then there will be 10% of noise,
+	 * meaning that each digit will be reversed (0 -> 1 or 1 -> 0) with a probability of 0.1.
+	 * 
+	 * @param s - A string that represents an array of integers '0' or '1' separated by separator.
+	 * @param percentageOfNoise - A number that represents how many percent of "noise" should be in this array. (The range is 0 to 100)
+	 * @param separator - The separator between '0' and '1'. 
+	 * @return a string that represents an array with the appropriate amount of "noise"
+	 */
+	public String imageNoise(String s, int percentageOfNoise, String separator) {
+		
+		String newStr = "";
+		int maxRangeOfPercent = 100;
+		int temp = 0;
+		Random rand = new Random(10);
+		
+		String[] arrStr = s.split(separator);
+				
+		for(int i = 0; i < arrStr.length; i++)
+		{
+			temp = Integer.parseInt(arrStr[i]);
+			if(rand.nextInt(maxRangeOfPercent) <= percentageOfNoise)
+			{//Do noise in this digit
+				temp = (temp == 1)? 0 : 1;
+			}
+			newStr += temp;
+		}
+		
+		return newStr;
+	}
 
 }
+
