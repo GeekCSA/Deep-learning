@@ -16,6 +16,8 @@ import java.util.stream.Stream;
  */
 public class FileModification {
 
+	final static int maxRangeOfNoisePercent = 100;
+	
 	private File file;
 	private long numOfLines;
 
@@ -58,11 +60,11 @@ public class FileModification {
 	 * @return - Array of ArrayList<String>. each ArrayList<String> holds rows according to the percentages given to the function.
 	 * @throws Exception The noise is out of range 0 - 100
 	 */
-	public ArrayList<String>[] splitFile(int[] percent,int numOfSkipHeaderLine,int noise) throws Exception
+	public ArrayList<Example>[] splitFile(int[] percent,int numOfSkipHeaderLine,int noise) throws Exception
 	{
 		long[] linesForThePercent = null;
 		
-		if (noise < 0 || noise > 100) {
+		if (noise < 0 || noise > maxRangeOfNoisePercent) {
 		    throw new Exception("The noise is out of range 0 - 100");
 		}
 
@@ -72,7 +74,7 @@ public class FileModification {
 			e1.printStackTrace();
 		}
 		//The array is returned
-		ArrayList<String>[] testAndTry = new ArrayList[linesForThePercent.length];
+		ArrayList<Example>[] testAndTry = new ArrayList[linesForThePercent.length];
 
 
 		try(FileReader fr = new FileReader(file);)
@@ -93,9 +95,17 @@ public class FileModification {
 
 				for (int j = 0; j < linesForThePercent[i]; j++) {
 					String s = br.readLine();
-					String withNoise = imageNoise(s, noise,",");
-					testAndTry[i].add(withNoise);
-					writer.println(s);
+					Example ex;
+					try {
+						ex = new Example(s);
+						imageNoise(ex, noise,",");
+						testAndTry[i].add(ex);
+						writer.println(ex.toString());
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
 				}
 				writer.close();
 			}
@@ -148,35 +158,30 @@ public class FileModification {
 	}
 	
 	/**
-	 * The function takes the string of '0' and '1' turns it into an array and makes "noise" according to the required percentages.
+	 * The function takes the ???? (index 0 ...)  turns it into an array and makes "noise" according to the required percentages.
 	 * For example, if the number is 10 then there will be 10% of noise,
 	 * meaning that each digit will be reversed (0 -> 1 or 1 -> 0) with a probability of 0.1.
 	 * 
-	 * @param s - A string that represents an array of integers '0' or '1' separated by separator.
+	 * @param ex - A string that represents an array of integers '0' or '1' separated by separator.
 	 * @param percentageOfNoise - A number that represents how many percent of "noise" should be in this array. (The range is 0 to 100)
 	 * @param separator - The separator between '0' and '1'. 
-	 * @return a string that represents an array with the appropriate amount of "noise"
 	 */
-	public String imageNoise(String s, int percentageOfNoise, String separator) {
+	public void imageNoise(Example ex, int percentageOfNoise, String separator) {
 		
-		String newStr = "";
-		int maxRangeOfPercent = 100;
-		int temp = 0;
 		Random rand = new Random(10);
 		
-		String[] arrStr = s.split(separator);
+		int[] temp = ex.getBits();
 				
-		for(int i = 0; i < arrStr.length; i++)
+		//Start from index 1 (not 0) because at index 0 ...
+		for(int i = 0; i < temp.length; i++)
 		{
-			temp = Integer.parseInt(arrStr[i]);
-			if(rand.nextInt(maxRangeOfPercent) <= percentageOfNoise)
+			if(rand.nextInt(maxRangeOfNoisePercent) <= percentageOfNoise)
 			{//Do noise in this digit
-				temp = (temp == 1)? 0 : 1;
+				temp[i] = (temp[i] == 1)? 0 : 1;
 			}
-			newStr += temp;
 		}
 		
-		return newStr;
+		ex.setBits(temp);
 	}
 
 }

@@ -21,8 +21,8 @@ public class main {
 		File[] listOfFiles = folder.listFiles();
 
 		//These arrays hold the rows that return files by percentage 
-		ArrayList<String> eighty = new ArrayList<>();//80%
-		ArrayList<String> twenty = new ArrayList<>();//20%
+		ArrayList<Example> eighty = new ArrayList<>();//80%
+		ArrayList<Example> twenty = new ArrayList<>();//20%
 
 		//This array preserves the desired distribution of the number of rows per file in percentages
 		int[] percentages = {20,80};
@@ -36,9 +36,9 @@ public class main {
 				System.out.println(fm.numOfLinesInFile());
 
 				//Split the file by percentage.
-				//The 80% of the file is returned in the temp[1] and the 20% of the file is returned in the temp[0]
+				//The 80% of the file is returned in the temp[1] and the 20% of the file is returned in the temp[0] and 10% of noise.
 				//0% of noise in the data.
-				ArrayList<String>[] temp = fm.splitFile(percentages, 1,60);
+				ArrayList<Example>[] temp = fm.splitFile(percentages, 1,10);
 				eighty.addAll(temp[1]);
 				twenty.addAll(temp[0]);
 			} catch (Exception e) {
@@ -49,5 +49,7 @@ public class main {
 		//Have to scramble the information so that the letters are not arranged in order but will be messy
 		Collections.shuffle(eighty);
 		Collections.shuffle(twenty);
+		
+		
 	}
 }
