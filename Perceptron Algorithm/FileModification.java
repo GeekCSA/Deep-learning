@@ -102,7 +102,6 @@ public class FileModification {
 						testAndTry[i].add(ex);
 						writer.println(ex.toString());
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 
@@ -158,11 +157,11 @@ public class FileModification {
 	}
 	
 	/**
-	 * The function takes the ???? (index 0 ...)  turns it into an array and makes "noise" according to the required percentages.
+	 * The function takes an object of type Example And "stirring" the array of bits in it according to the required percentage.
 	 * For example, if the number is 10 then there will be 10% of noise,
 	 * meaning that each digit will be reversed (0 -> 1 or 1 -> 0) with a probability of 0.1.
 	 * 
-	 * @param ex - A string that represents an array of integers '0' or '1' separated by separator.
+	 * @param ex - An object that contains information about this type of letter and also the bit array representing the signal
 	 * @param percentageOfNoise - A number that represents how many percent of "noise" should be in this array. (The range is 0 to 100)
 	 * @param separator - The separator between '0' and '1'. 
 	 */
