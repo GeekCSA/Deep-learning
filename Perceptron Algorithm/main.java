@@ -16,7 +16,7 @@ public class main {
 	public static void main(String[] args) {
 
 		//The source folder of the data
-		File folder = new File("src/Latters/");
+		File folder = new File("src/Letters/");
 		//Array of the files in the source folder
 		File[] listOfFiles = folder.listFiles();
 
@@ -38,7 +38,7 @@ public class main {
 				//Split the file by percentage.
 				//The 80% of the file is returned in the temp[1] and the 20% of the file is returned in the temp[0] and 10% of noise.
 				//0% of noise in the data.
-				ArrayList<Example>[] temp = fm.splitFile(percentages, 1,10);
+				ArrayList<Example>[] temp = fm.splitFile(percentages, 1,100);
 				eighty.addAll(temp[1]);
 				twenty.addAll(temp[0]);
 			} catch (Exception e) {
@@ -50,6 +50,12 @@ public class main {
 		Collections.shuffle(eighty);
 		Collections.shuffle(twenty);
 		
+		int[] weights = new int[170];
 		
+		Perceptron.algorithm(weights, eighty, Letter.BET);
+		
+		Perceptron.test(weights, twenty, Letter.BET);
+		
+		System.out.println("");
 	}
 }
