@@ -1,6 +1,9 @@
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
 
@@ -38,7 +41,7 @@ public class main {
 				//Split the file by percentage.
 				//The 80% of the file is returned in the temp[1] and the 20% of the file is returned in the temp[0] and 10% of noise.
 				//0% of noise in the data.
-				ArrayList<Example>[] temp = fm.splitFile(percentages, 1,100);
+				ArrayList<Example>[] temp = fm.splitFile(percentages, 1,0);
 				eighty.addAll(temp[1]);
 				twenty.addAll(temp[0]);
 			} catch (Exception e) {
@@ -49,13 +52,16 @@ public class main {
 		//Have to scramble the information so that the letters are not arranged in order but will be messy
 		Collections.shuffle(eighty);
 		Collections.shuffle(twenty);
-		
+
 		int[] weights = new int[170];
-		
+
 		Perceptron.algorithm(weights, eighty, Letter.BET);
-		
-		Perceptron.test(weights, twenty, Letter.BET);
-		
+
+		System.out.println("\t\t\t" + Arrays.toString(weights));
+
+		Perceptron.test(weights, twenty, Letter.GIMEL);
+
 		System.out.println("");
 	}
 }
+

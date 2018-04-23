@@ -9,8 +9,8 @@ public class Perceptron {
 	/**
 	 * 
 	 * @param weights weights array, where weights[0] is the threshold, initialized to all zeros.
-	 * @param ListOfexample ArrayList of Examples for training the Preceptron.
-	 * @param x Enum Letter, for what letter we want our preceptron to work with.
+	 * @param ListOfexample ArrayList of Examples for training the perceptron.
+	 * @param x Enum Letter, for what letter we want our perceptron to work with.
 	 */
 	public static void algorithm(int[] weights,ArrayList<Example> ListOfexample,Letter x){
 
@@ -24,11 +24,13 @@ public class Perceptron {
 			for(int i=1,j=0; i<weights.length;i++,j++) {
 				func+=weights[i]*bits[j];
 			}
-			boolean r=((func)>weights[0])&&(cur==x);
-			boolean f=((func)<=weights[0])&&(cur!=x);
+			
+			boolean r=(func>weights[0])&&(cur==x);
+			boolean f=(func<=weights[0])&&(cur!=x);
+			
 			/*FIX*/
 			if(!(r||f)) {
-				if(!r) {
+				if(!r) {//cur==x ??
 					weights[0]+=1;
 					for(int i=1,j=0; i<weights.length;i++,j++) {
 						weights[i]=weights[i]+bits[j];
@@ -42,7 +44,12 @@ public class Perceptron {
 			}
 		}
 	}
-
+	/**
+	 * 
+	 * @param weights weights array, where weights[0] is the threshold.
+	 * @param ListOfexample ArrayList of Examples for training the perceptron.
+	 * @param x Enum Letter, for what letter we want our perceptron to work with.
+	 */
 	public static void test(int[] weights,ArrayList<Example> ListOfexample, Letter x) {
 
 		int func=0;
@@ -57,10 +64,10 @@ public class Perceptron {
 			for(int i=1,j=0; i<weights.length;i++,j++) {
 				func+=weights[i]*bits[j];
 			}
-			boolean r=((func)>weights[0])&&(cur==x);
-			boolean f=((func)<=weights[0])&&(cur!=x);
+			boolean r = ((func>weights[0])&&(cur==x));//
+			boolean f = ((func<=weights[0])&&(cur!=x));//
 			/*FIX*/
-			if((r||f)) {
+			if(r||f) {//func>weights[0] ??
 				sCounter++;
 			}
 			counter++;

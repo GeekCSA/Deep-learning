@@ -89,7 +89,7 @@ public class FileModification {
 			for (int i = 0; i < linesForThePercent.length; i++) {
 
 				//Create a file that contain the rows for a specified percent
-				writer = new PrintWriter(getFilePathWithoutName() + "/" + getFileNameWhitoutType() + "_" + i + "_With_noise_of_" + noise + "." + getFileType(), "UTF-8");
+//				writer = new PrintWriter(getFilePathWithoutName() + "/" + getFileNameWhitoutType() + "_" + i + "_With_noise_of_" + noise + "." + getFileType(), "UTF-8");
 				
 				testAndTry[i] = new ArrayList<>();
 
@@ -98,16 +98,18 @@ public class FileModification {
 					Example ex;
 					try {
 						ex = new Example(s);
-						imageNoise(ex, noise,",");
+						if (i == 1) {//noise only 80%
+							imageNoise(ex, noise, ",");
+						}
 						testAndTry[i].add(ex);
-						writer.println(ex.toString());
+//						writer.println(ex.toString());
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 
 				}
-				writer.close();
+//				writer.close();
 			}
 		}
 		catch (Exception e) {
