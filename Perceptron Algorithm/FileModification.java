@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Random;
 import java.util.stream.Stream;
 
@@ -15,6 +16,27 @@ import java.util.stream.Stream;
  * @since 16/4/2018
  */
 public class FileModification {
+	
+	static void print_Csv(ArrayList<String> csv,String i) {
+		String header="total examples,pos_pos,pos_pos%,neg_neg,neg_neg%,letterCounter,total_fired,sRate%,Learning_Rate,noise,%test,%train";
+		PrintWriter writer = null;
+		try {
+			writer = new PrintWriter("src/stat/"+i+".csv");
+			writer.println(header);
+			Iterator<String> it=csv.iterator();
+			while(it.hasNext()) {
+				String s=it.next();
+				writer.println(s);
+			}
+			writer.close();
+
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
+	}
 
 	final static int maxRangeOfNoisePercent = 100;
 	

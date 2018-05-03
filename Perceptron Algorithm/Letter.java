@@ -1,4 +1,4 @@
 
 public enum Letter {
-BET,GIMEL,ZAIN,YUD,KAF,NUN,VAV
+BET,GIMEL,ZAIN,YUD,KAF,NUN,VAV,NOT;
 }
