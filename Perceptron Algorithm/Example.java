@@ -3,8 +3,8 @@ import java.util.Arrays;
 
 public class Example {
 
-	private Letter letter = Letter.BET;
-	private int[] bits;
+	private Letter letter = Letter.BET;//Type of letter
+	private int[] bits;//Array of bits that represent a letter
 
 	public Example(String s) throws Exception {	
 

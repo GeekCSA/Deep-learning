@@ -85,8 +85,5 @@ public class Perceptron {
 		if(func>weights[0])return true;
 		else return false;
 		
-
 	}
 }
-
-

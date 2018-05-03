@@ -17,6 +17,16 @@ import java.util.stream.Stream;
  */
 public class FileModification {
 	
+
+	final static int maxRangeOfNoisePercent = 100;
+	
+	private File file;
+	private long numOfLines; //In this file
+	
+	
+	/**
+	 * The function writes into a file in the folder src/stat/ the analyzes received from the list ArrayList<String> csv
+	 */
 	static void print_Csv(ArrayList<String> csv,String i) {
 		String header="total examples,pos_pos,pos_pos%,neg_neg,neg_neg%,letterCounter,total_fired,sRate%,Learning_Rate,noise,%test,%train";
 		PrintWriter writer = null;
@@ -37,11 +47,6 @@ public class FileModification {
 
 
 	}
-
-	final static int maxRangeOfNoisePercent = 100;
-	
-	private File file;
-	private long numOfLines;
 
 	/**
 	 * @param String path - path of a file

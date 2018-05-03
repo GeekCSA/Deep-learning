@@ -43,10 +43,8 @@ public class main {
 		return ret;
 	}
 
-	/**
-	 * @param args
-	 */
 	public static void main(String[] args) {
+		
 		Perceptron bet=new Perceptron(true,Letter.BET);
 		Perceptron gimel=new Perceptron(true,Letter.GIMEL);
 		Perceptron vav=new Perceptron(true,Letter.VAV);
@@ -168,6 +166,7 @@ public class main {
 			rate=((id_counter+counter)/size)*100;
 			System.out.println(rate);
 //			System.out.println(rate+" counter "+id_counter+" size "+size+" "+counter);
+			
 			System.out.println("BET \tPP\t"+bet.positive_positives+"\t NN\t"+bet.negative_negatives+"\tletter\t"+bet.let);
 			System.out.println("GIMEL \tPP\t"+gimel.positive_positives+"\t NN\t"+gimel.negative_negatives+"\tletter\t"+gimel.let);
 			System.out.println("VAV \tPP\t"+vav.positive_positives+"\t NN\t"+vav.negative_negatives+"\tletter\t"+vav.let);
@@ -175,7 +174,9 @@ public class main {
 			System.out.println("KAF \tPP\t"+kaf.positive_positives+"\t NN\t"+kaf.negative_negatives+"\tletter\t"+kaf.let);
 			System.out.println("ZAIN \tPP\t"+zain.positive_positives+"\t NN\t"+zain.negative_negatives+"\tletter\t"+zain.let);
 			System.out.println("NUN \tPP\t"+nun.positive_positives+"\t NN\t"+nun.negative_negatives+"\tletter\t"+nun.let);
+			
 			System.out.println("total\t"+bet.total);
+			
 			bet.resetSTAT();
 			gimel.resetSTAT();
 			vav.resetSTAT();
@@ -184,7 +185,9 @@ public class main {
 			zain.resetSTAT();
 			nun.resetSTAT();
 
-		}System.out.println(rate);
+		}
+		System.out.println(rate);
+		
 		bet.reset();
 		gimel.reset();
 		vav.reset();

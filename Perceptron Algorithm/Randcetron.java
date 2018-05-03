@@ -36,6 +36,9 @@ public class Randcetron {
 			total_counter++;
 		}
 		sRate=((pos_pos*(6.0/7)+neg_neg*(1.0/7)))/total_counter * 100;
+		
+		//Analysis of the information obtained
+		
 //		if(sRate>14.0)
 //		System.out.println(
 //				"\ttotal examples:\t"+total_counter +
