@@ -12771,9 +12771,10 @@ Iteration: 900000  W: [[ 28.007395 ]
 <br>$ J(w,b) = (\frac{1}{2m} * \sum_{i=1}^{m} (Wx_i + b - y_i)^2)+\frac{\lambda}{2}({||W||}_2)^2 $.
 <br>where $ {||W||}_p = (\sum_{i=1}^{k} |w_i|^p)^{\frac{1}{p}} $</li>
 </ul>
-<p>In order for RIDGE to work we need to change the loss function to 
-<br>loss = tf.reduce<em>mean(tf.pow(y - y</em>, 2)) + 0.1*tf.nn.l2_loss(W)
-<br>Note: tf.nn.l2_loss(W) = tf.reduce_sum(W**2)/2.</p>
+<p>In order for RIDGE to work we need to change the loss function to</p>
+<div class="highlight"><pre><span></span><span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y_</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">+</span> <span class="mf">0.1</span>\<span class="o">*</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">l2_loss</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+</pre></div>
+<p>Note: tf.nn.l2_loss(W) = tf.reduce_sum(W**2)/2.</p>
 <p>In the equation of Lasso there is a problem with the derivation because there is an absolute value in his lust, which makes it harder for us to cut and therefore we will use another method to realize his code.</p>
 
 </div>
@@ -13599,7 +13600,7 @@ The computer will turn the number to 0 and get we an error (since log 0 is not s
 <ul>
 <li>tf.nn.sigmoid(tf.matmul(x,W) + b)</li>
 <li>tf.nn.sigmoid_cross_entropy_with_logits()</li>
-<li>tf.nn.softmax_cross _entropy_with_logits_v2()</li>
+<li>tf.nn.softmax_cross_entropy_with_logits_v2()</li>
 </ul>
 
 </div>

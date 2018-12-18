@@ -11827,7 +11827,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Until now, we have dealt with full connection networks, meaning that each neuron is connected to each neuron in the next layer. Due to this structure of the network it is necessary to create a lot of weights and creating a lot of weights makes it very difficult calculations</p>
+<p>Until now, we have dealt with fully-connected networks, meaning that each neuron is connected to each neuron in the next layer. Due to this structure of the network it is necessary to create a lot of weights and creating a lot of weights makes it very difficult calculations</p>
 <p>In this chapter we will focus on a network of Convolational Neural Networks (CNN).
 This network can learn the right features to look for in data. This network is very useful in image processing.</p>
 
@@ -11850,7 +11850,7 @@ This network can learn the right features to look for in data. This network is v
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Each layer in the network has a kernel that consists of one or more matrixes.
 Each matrix is a filter for another feature in the input for that layer.</p>
-<p>Each cell in each matrices is the weight the network will learn (similar to weights in full connection) to get the correct result at the end.</p>
+<p>Each cell in each matrices is the weight the network will learn (similar to weights in fully-connected) to get the correct result at the end.</p>
 <p>The grid receives a matrix in the input, and moves the kernel over the entire matrix from the upper left corner to the lower right corner. In each shift, it calculates the sum of the kernel's product values with the matrix values where the kernel is.</p>
 <p>For example:</p>
 <p><img src="kernel_cnn_calc.png" width="550px"/></p>
@@ -11952,7 +11952,7 @@ In that case, in every kernel group, each kernel multiplies a different dimensio
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Given a network in the form of a full connection with weights on the arches, then in every few rounds determine the output of some neurons 0, after a few more rounds decide that the output of some other neurons is 0 and continue.
+<p>Given a network in the form of a fully-connected with weights on the arches, then in every few rounds determine the output of some neurons 0, after a few more rounds decide that the output of some other neurons is 0 and continue.
 <br>When the other neurons whose output is not equal to 0 receive a higher weight (for example, their weights are multiplied by only 2 for those rounds).</p>
 <p>There are a number of explanations why layers help dorpout:</p>
 <ul>
@@ -12297,8 +12297,8 @@ step 9900, training accuracy 0.98
 </ol>
 <p>Reshape the x to [None, 7<em>7</em>64]</p>
 <ol>
-<li>Fully connection layer (ReLU), 1024 neurons, input from Max Pool layer.</li>
-<li>Dropout layer, input from the fully connection layer.</li>
+<li>Fully-connected layer (ReLU), 1024 neurons, input from Max Pool layer.</li>
+<li>Dropout layer, input from the fully-connected layer.</li>
 <li>Softmax layer, input from the dropout layer.</li>
 </ol>
 
@@ -12321,10 +12321,12 @@ step 9900, training accuracy 0.98
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Instead of manually stating all the Ws bs etc., we can use contrib.layers:</p>
 <ul>
-<li>Convolution layer
-<br>    tf.layers.conv2d( inputs=conv1,filters=32,kernel_size=[4,4],strides=[1,1],padding='VALID', activation=tf.nn.relu)</li>
-<li>Fully connection layer
-<br>    tf.layers.dense(last_layer, units=10, activation=tf.nn.relu)</li>
+<li>Convolution layer<div class="highlight"><pre><span></span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">conv1</span><span class="p">,</span> <span class="n">filters</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span> <span class="n">kernel_size</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">],</span> <span class="n">strides</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">padding</span> <span class="o">=</span> <span class="s1">&#39;VALID&#39;</span><span class="p">,</span> <span class="n">activation</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">)</span>
+</pre></div>
+</li>
+<li>Fully-connected layer<div class="highlight"><pre><span></span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">dense</span><span class="p">(</span><span class="n">last_layer</span><span class="p">,</span> <span class="n">units</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">)</span>
+</pre></div>
+</li>
 </ul>
 
 </div>

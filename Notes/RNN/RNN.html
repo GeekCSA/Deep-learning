@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" />
-<title>NLTK</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>RNN</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 
 <style type="text/css">
@@ -11788,7 +11788,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Natural-Language-Tool-Kit-(NLTK)">Natural Language Tool-Kit (NLTK)<a class="anchor-link" href="#Natural-Language-Tool-Kit-(NLTK)">&#182;</a></h1>
+<h1 id="Recurrent-Neural-Networks-(RNN)">Recurrent Neural Networks (RNN)<a class="anchor-link" href="#Recurrent-Neural-Networks-(RNN)">&#182;</a></h1>
 </div>
 </div>
 </div>
@@ -11798,23 +11798,19 @@ div#notebook {
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><a id='contents'></a></p>
 <h3 id="Table-of-contents">Table of contents<a class="anchor-link" href="#Table-of-contents">&#182;</a></h3><ul>
-<li><a href="#tokenize">Tokenize</a></li>
-<li><a href="#stemmer">Stemmer</a></li>
-<li><a href="#pos">Part of Speech Tagging (POS)</a></li>
-<li><a href="#lemmatization">Lemmatization</a></li>
-<li><a href="#chunking">Chunking</a></li>
-<li><a href="#ner">Named Entity Recognition (NER)</a></li>
-<li><a href="#n-grams">N-Grams</a><ul>
-<li><a href="#create_random_story">Create random story by N-Grams</a></li>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#description_of_the_network_structure">Description Of The Network Structure</a><ul>
+<li><a href="#long_short_term_memory">Long Short Term Memory (LSTM)</a><ul>
+<li><a href="#how_many_weights_in_lstm">How Many Weights In LSTM</a></li>
 </ul>
 </li>
-<li><a href="#cfg">Context Free-Grammar (CFG)</a><ul>
-<li><a href="#cfg_parser">CFG Parser</a></li>
+<li><a href="#gru">GRU</a></li>
 </ul>
 </li>
-<li><a href="#cykAlgorithm">CYK Algorithm</a></li>
-<li><a href="#corenlp">CoreNLP</a></li>
-<li><a href="#sentiment_analysis">Sentiment Analysis</a></li>
+<li><a href="#generating_text_in_tensorflow_with_rnn">Generating Text in TensorFlow With RNN</a></li>
+<li><a href="#tf.nn.rnn_cell">tf.nn.rnn_cell</a></li>
+<li><a href="#multiple_layers_of_rnn">Multiple Layers Of RNN</a></li>
+<li><a href="#bleu_scorernn">BLEU (Bilingual Evaluation Understudy) ScoreRNN</a></li>
 </ul>
 
 </div>
@@ -11824,16 +11820,173 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Based on presentations by Dr. Amos Azaria</p>
-<p>For the computer to understand what we are talking about, we need to simplify the text and analyze it.
-<br>One of the libraries that helps us a lot in this area is nltk.</p>
-<p>You have to install nltk.
-<br>Write in the terminal: pip install nltk</p>
-<p>Before you run the code you have to run the first and second command:</p>
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">nltk</span>
-<span class="n">nltk</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
-</pre></div>
-<p>You have to run the second command only in the first time you use this notebook.</p>
+<p><a href="#contents">^ Contents</a></p>
+<h2 id="Introduction">Introduction<a class="anchor-link" href="#Introduction">&#182;</a></h2><p><a id='introduction'></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>An analysis of sentences is used in many fields, such as translating one language into another, writing a description of pictures, analysis of sound, etc. In order for us to perform the task properly and we can understand and create new sentences we must understand the content of the entire text and not just check what words appear in it.
+<br>In this tutorial we will focus on the analysis of text by Recurrent Neural Networks (RNN).
+<br>On the face of it, we can ask why not use a fully-connected network to analyze the trial?
+In order to use fully-connected we will need to convert the sentence into a form that we can insert into the network.
+<br>One method is a bag of words. This method is not a good method because in this method we do not give importance to the order of the words within the sentence, and the order of the words in the sentence is very critical for proper understanding of the meaning of the sentence.</p>
+<p>For example:</p>
+<ol>
+<li>The child ate pizza and did not eat vegetables</li>
+<li>The child ate vegetables and did not eat pizza</li>
+</ol>
+<p>The meaning of these two sentences is the opposite of each other, but if we implement the bag of words method for both sentences we will get the same result.
+<br>Therefore we can not use this method.</p>
+<p>And the use of the one hot method to represent the words, which gives importance to the location of the words in the sentence, is incorrect because then we do not give importance to the meaning of the words but give all the words the same weight.</p>
+<p>Another way to try is to use CNN, since CNN gives importance to information points that are close to each other. But still do not receive general evidence of the entire trial.</p>
+<p>Therefore, as noted above, we will learn a new method for analyzing text called RNN.</p>
+<p>As we mentioned above, analysis of text can be in many cases. We will detail these cases:</p>
+<ol>
+<li>One to one - The input is single (single image or word) that is classified into a single class (binary classification). For example: Is it home or not?</li>
+<li>One to many - The input is single (image) that is categorized into many departments or written (in words) to the image. For example: for this image <img src="two_birds.jpg" width="150px"/>
+<a href="https://he.wikipedia.org/wiki/%D7%A4%D7%95%D7%A8%D7%98%D7%9C:%D7%91%D7%A2%D7%9C%D7%99_%D7%97%D7%99%D7%99%D7%9D">credit</a>
+ <br>We want it to say: Two birds fly.</li>
+<li><p>many to one - The input is a group (images or words) that is classified into a single class (binary classification). For example: Does the video (group of pictures) show a birthday party or not, is the sentence urgent or not.</p>
+</li>
+<li><p>Many-to-Many Input is a group (images or words) that is converted to another group.</p>
+<ul>
+<li>Translation of sentences. The text is first decoded and only then is the answer given to the output.</li>
+<li>Automatic speech recognition. Speech is deciphered directly into text, you hear a word and translate it and then another word and translate it too.</li>
+</ul>
+</li>
+</ol>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="#contents">^ Contents</a></p>
+<h2 id="Description-of-the-network-structure">Description of the network structure<a class="anchor-link" href="#Description-of-the-network-structure">&#182;</a></h2><p><a id='description_of_the_network_structure'></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The RNN structure is: In each iteration get the next character / word $(x_i)$ and the memory of all the so-called until now. The output is the next character / word or the translation / meaning $(h_i)$ of the text so far, the output is also input to the next iteration.
+<br>Each of the iterations is represented by a square that is written inside it.
+<br>The two structures are identical, but the right structure is the non-rolled form of the left structure.</p>
+<p><img src="RNN-unrolled.png" width="450px"/></p>
+<p><a href="http://colah.github.io/posts/2015-08-Understanding-LSTMs">credit</a></p>
+<p>After we have seen the general structure of all iterations, we will now focus on the internal structure of each iterations.</p>
+<p>After we have seen the general structure of all iterations, we will now focus on the internal structure of each iterations.</p>
+<p>RNN has several different implementations</p>
+<ul>
+<li>Long Short Term Memory (LSTM)</li>
+<li>GRU</li>
+</ul>
+<p>We will explain the implementation of each method.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="#contents">^ Contents</a></p>
+<h3 id="Long-Short-Term-Memory-(LSTM)">Long Short Term Memory (LSTM)<a class="anchor-link" href="#Long-Short-Term-Memory-(LSTM)">&#182;</a></h3><p><a id='long_short_term_memory'></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The full appearance of the internal structure of each iteration is</p>
+<p><img src="IntenalLSTM.png" width="700px"/></p>
+<p><a href="http://colah.github.io/posts/2015-08-Understanding-LSTMs">credit</a></p>
+<p>Now we will explain each and every part of the above structure:</p>
+<ul>
+<li>The red part: Forget what has been learned until now. That is, doubling the "memory" in the number from 0 to 1 when 0 means forgetting everything learned until now and 1 means remembering everything that has been learned until now, each number in this range means a few percent to remember from what has been learned so far.
+The sign $\sigma$ symbolizes logistic regression. The input is the previous memory and the new word (which is not yet read) and the output is a number between 0 and 1 as described above.</li>
+<li>Green part: remember the new thing learned (in addition to the old memory) and if so, how much of it to remember, that is, what importance to give to the new thing. That is, this part is responsible for adding memory to the long-term memory.
+  This section consists of two parts:<ol>
+<li>Logistic regression that determines whether to remember the new thing. His input is the old memory and the new word and his output is a number between 0 and 1 that says whether to remember.</li>
+<li>Creates the new memory and adds it to the old memory.</li>
+</ol>
+</li>
+<li>Blue part: says how much of all memory created at this stage should move on. We put the memory into the tanh function to get numbers between -1 and 1. The result will be the input of the next step. That is, this part is responsible for short-term memory, the memory that goes to the next stage.</li>
+</ul>
+<p>In order to expand your understanding of the subject you can read on <a href="http://colah.github.io/posts/2015-08-Understanding-LSTMs/">this web</a> is a great web that explains the entire structure very well.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="#contents">^ Contents</a></p>
+<h4 id="How-Many-Weights-In-LSTM?">How Many Weights In LSTM?<a class="anchor-link" href="#How-Many-Weights-In-LSTM?">&#182;</a></h4><p><a id='how_many_weights_in_lstm'></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>One of the important parameters in understanding the system structure is knowing how many weights there are in the system.
+To do this we will perform an analysis of the amount of weights in the system.
+<br>Let's mark a few things:</p>
+<ul>
+<li>k - The dimension of the new input $(x_i)$</li>
+<li>d - the dimension of the memory transferred from one stage to another (the width of the horizontal lines)</li>
+<li>t - like steps / cells</li>
+<li>m - Mini-batch size</li>
+</ul>
+<p>In this implementation, we perform 3 times linear regression and one time tanh, each function is performed d times (for each memory cell). For each of the functions the inputs are entered, $x_i$ (k weights) and the memory from the previous step (d weights), that is there are k + d weights and d d times.
+So the total account is: $\left(\left(k + d\right) + 1 \right) * 4 * d$
+<br>It can be seen that m and t do not affect the number at all.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="#contents">^ Contents</a></p>
+<h3 id="GRU">GRU<a class="anchor-link" href="#GRU">&#182;</a></h3><p><a id='gru'></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>A different method for realizing RNN is called GRU. The realization of this method is shown in the image below.
+This method is similar in its parts to the previous method (LSTM) but has joined several parts together.</p>
+<p><img src="LSTM3-var-GRU.png" width="300px"/></p>
+<p><a href="http://colah.github.io/posts/2015-08-Understanding-LSTMs">credit</a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="#contents">^ Contents</a></p>
+<h2 id="Generating-Text-in-TensorFlow-With-RNN">Generating Text in TensorFlow With RNN<a class="anchor-link" href="#Generating-Text-in-TensorFlow-With-RNN">&#182;</a></h2><p><a id='generating_text_in_tensorflow_with_rnn'></a></p>
 
 </div>
 </div>
@@ -11843,7 +11996,9 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[1]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">nltk</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
 </pre></div>
 
 </div>
@@ -11856,458 +12011,43 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">nltk</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#A list that holds all characters as ASCII values</span>
+<span class="n">all_text</span> <span class="o">=</span> <span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="s2">&quot;https://s3.amazonaws.com/text-datasets/nietzsche.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))]</span>
 </pre></div>
 
 </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>[nltk_data] Downloading collection &#39;all&#39;
-[nltk_data]    | 
-[nltk_data]    | Downloading package abc to /home/mcsa/nltk_data...
-[nltk_data]    |   Package abc is already up-to-date!
-[nltk_data]    | Downloading package alpino to /home/mcsa/nltk_data...
-[nltk_data]    |   Package alpino is already up-to-date!
-[nltk_data]    | Downloading package biocreative_ppi to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package biocreative_ppi is already up-to-date!
-[nltk_data]    | Downloading package brown to /home/mcsa/nltk_data...
-[nltk_data]    |   Package brown is already up-to-date!
-[nltk_data]    | Downloading package brown_tei to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package brown_tei is already up-to-date!
-[nltk_data]    | Downloading package cess_cat to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package cess_cat is already up-to-date!
-[nltk_data]    | Downloading package cess_esp to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package cess_esp is already up-to-date!
-[nltk_data]    | Downloading package chat80 to /home/mcsa/nltk_data...
-[nltk_data]    |   Package chat80 is already up-to-date!
-[nltk_data]    | Downloading package city_database to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package city_database is already up-to-date!
-[nltk_data]    | Downloading package cmudict to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package cmudict is already up-to-date!
-[nltk_data]    | Downloading package comparative_sentences to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package comparative_sentences is already up-to-
-[nltk_data]    |       date!
-[nltk_data]    | Downloading package comtrans to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package comtrans is already up-to-date!
-[nltk_data]    | Downloading package conll2000 to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package conll2000 is already up-to-date!
-[nltk_data]    | Downloading package conll2002 to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package conll2002 is already up-to-date!
-[nltk_data]    | Downloading package conll2007 to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package conll2007 is already up-to-date!
-[nltk_data]    | Downloading package crubadan to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package crubadan is already up-to-date!
-[nltk_data]    | Downloading package dependency_treebank to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package dependency_treebank is already up-to-date!
-[nltk_data]    | Downloading package dolch to /home/mcsa/nltk_data...
-[nltk_data]    |   Package dolch is already up-to-date!
-[nltk_data]    | Downloading package europarl_raw to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package europarl_raw is already up-to-date!
-[nltk_data]    | Downloading package floresta to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package floresta is already up-to-date!
-[nltk_data]    | Downloading package framenet_v15 to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package framenet_v15 is already up-to-date!
-[nltk_data]    | Downloading package framenet_v17 to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package framenet_v17 is already up-to-date!
-[nltk_data]    | Downloading package gazetteers to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package gazetteers is already up-to-date!
-[nltk_data]    | Downloading package genesis to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package genesis is already up-to-date!
-[nltk_data]    | Downloading package gutenberg to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package gutenberg is already up-to-date!
-[nltk_data]    | Downloading package ieer to /home/mcsa/nltk_data...
-[nltk_data]    |   Package ieer is already up-to-date!
-[nltk_data]    | Downloading package inaugural to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package inaugural is already up-to-date!
-[nltk_data]    | Downloading package indian to /home/mcsa/nltk_data...
-[nltk_data]    |   Package indian is already up-to-date!
-[nltk_data]    | Downloading package jeita to /home/mcsa/nltk_data...
-[nltk_data]    |   Package jeita is already up-to-date!
-[nltk_data]    | Downloading package kimmo to /home/mcsa/nltk_data...
-[nltk_data]    |   Package kimmo is already up-to-date!
-[nltk_data]    | Downloading package knbc to /home/mcsa/nltk_data...
-[nltk_data]    |   Package knbc is already up-to-date!
-[nltk_data]    | Downloading package lin_thesaurus to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package lin_thesaurus is already up-to-date!
-[nltk_data]    | Downloading package mac_morpho to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package mac_morpho is already up-to-date!
-[nltk_data]    | Downloading package machado to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package machado is already up-to-date!
-[nltk_data]    | Downloading package masc_tagged to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package masc_tagged is already up-to-date!
-[nltk_data]    | Downloading package moses_sample to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package moses_sample is already up-to-date!
-[nltk_data]    | Downloading package movie_reviews to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package movie_reviews is already up-to-date!
-[nltk_data]    | Downloading package names to /home/mcsa/nltk_data...
-[nltk_data]    |   Package names is already up-to-date!
-[nltk_data]    | Downloading package nombank.1.0 to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package nombank.1.0 is already up-to-date!
-[nltk_data]    | Downloading package nps_chat to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package nps_chat is already up-to-date!
-[nltk_data]    | Downloading package omw to /home/mcsa/nltk_data...
-[nltk_data]    |   Package omw is already up-to-date!
-[nltk_data]    | Downloading package opinion_lexicon to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package opinion_lexicon is already up-to-date!
-[nltk_data]    | Downloading package paradigms to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package paradigms is already up-to-date!
-[nltk_data]    | Downloading package pil to /home/mcsa/nltk_data...
-[nltk_data]    |   Package pil is already up-to-date!
-[nltk_data]    | Downloading package pl196x to /home/mcsa/nltk_data...
-[nltk_data]    |   Package pl196x is already up-to-date!
-[nltk_data]    | Downloading package ppattach to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package ppattach is already up-to-date!
-[nltk_data]    | Downloading package problem_reports to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package problem_reports is already up-to-date!
-[nltk_data]    | Downloading package propbank to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package propbank is already up-to-date!
-[nltk_data]    | Downloading package ptb to /home/mcsa/nltk_data...
-[nltk_data]    |   Package ptb is already up-to-date!
-[nltk_data]    | Downloading package product_reviews_1 to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package product_reviews_1 is already up-to-date!
-[nltk_data]    | Downloading package product_reviews_2 to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package product_reviews_2 is already up-to-date!
-[nltk_data]    | Downloading package pros_cons to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package pros_cons is already up-to-date!
-[nltk_data]    | Downloading package qc to /home/mcsa/nltk_data...
-[nltk_data]    |   Package qc is already up-to-date!
-[nltk_data]    | Downloading package reuters to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package reuters is already up-to-date!
-[nltk_data]    | Downloading package rte to /home/mcsa/nltk_data...
-[nltk_data]    |   Package rte is already up-to-date!
-[nltk_data]    | Downloading package semcor to /home/mcsa/nltk_data...
-[nltk_data]    |   Package semcor is already up-to-date!
-[nltk_data]    | Downloading package senseval to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package senseval is already up-to-date!
-[nltk_data]    | Downloading package sentiwordnet to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package sentiwordnet is already up-to-date!
-[nltk_data]    | Downloading package sentence_polarity to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package sentence_polarity is already up-to-date!
-[nltk_data]    | Downloading package shakespeare to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package shakespeare is already up-to-date!
-[nltk_data]    | Downloading package sinica_treebank to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package sinica_treebank is already up-to-date!
-[nltk_data]    | Downloading package smultron to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package smultron is already up-to-date!
-[nltk_data]    | Downloading package state_union to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package state_union is already up-to-date!
-[nltk_data]    | Downloading package stopwords to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package stopwords is already up-to-date!
-[nltk_data]    | Downloading package subjectivity to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package subjectivity is already up-to-date!
-[nltk_data]    | Downloading package swadesh to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package swadesh is already up-to-date!
-[nltk_data]    | Downloading package switchboard to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package switchboard is already up-to-date!
-[nltk_data]    | Downloading package timit to /home/mcsa/nltk_data...
-[nltk_data]    |   Package timit is already up-to-date!
-[nltk_data]    | Downloading package toolbox to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package toolbox is already up-to-date!
-[nltk_data]    | Downloading package treebank to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package treebank is already up-to-date!
-[nltk_data]    | Downloading package twitter_samples to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package twitter_samples is already up-to-date!
-[nltk_data]    | Downloading package udhr to /home/mcsa/nltk_data...
-[nltk_data]    |   Package udhr is already up-to-date!
-[nltk_data]    | Downloading package udhr2 to /home/mcsa/nltk_data...
-[nltk_data]    |   Package udhr2 is already up-to-date!
-[nltk_data]    | Downloading package unicode_samples to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package unicode_samples is already up-to-date!
-[nltk_data]    | Downloading package universal_treebanks_v20 to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package universal_treebanks_v20 is already up-to-
-[nltk_data]    |       date!
-[nltk_data]    | Downloading package verbnet to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package verbnet is already up-to-date!
-[nltk_data]    | Downloading package verbnet3 to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package verbnet3 is already up-to-date!
-[nltk_data]    | Downloading package webtext to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package webtext is already up-to-date!
-[nltk_data]    | Downloading package wordnet to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package wordnet is already up-to-date!
-[nltk_data]    | Downloading package wordnet_ic to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package wordnet_ic is already up-to-date!
-[nltk_data]    | Downloading package words to /home/mcsa/nltk_data...
-[nltk_data]    |   Package words is already up-to-date!
-[nltk_data]    | Downloading package ycoe to /home/mcsa/nltk_data...
-[nltk_data]    |   Package ycoe is already up-to-date!
-[nltk_data]    | Downloading package rslp to /home/mcsa/nltk_data...
-[nltk_data]    |   Package rslp is already up-to-date!
-[nltk_data]    | Downloading package maxent_treebank_pos_tagger to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package maxent_treebank_pos_tagger is already up-
-[nltk_data]    |       to-date!
-[nltk_data]    | Downloading package universal_tagset to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package universal_tagset is already up-to-date!
-[nltk_data]    | Downloading package maxent_ne_chunker to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package maxent_ne_chunker is already up-to-date!
-[nltk_data]    | Downloading package punkt to /home/mcsa/nltk_data...
-[nltk_data]    |   Package punkt is already up-to-date!
-[nltk_data]    | Downloading package book_grammars to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package book_grammars is already up-to-date!
-[nltk_data]    | Downloading package sample_grammars to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package sample_grammars is already up-to-date!
-[nltk_data]    | Downloading package spanish_grammars to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package spanish_grammars is already up-to-date!
-[nltk_data]    | Downloading package basque_grammars to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package basque_grammars is already up-to-date!
-[nltk_data]    | Downloading package large_grammars to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package large_grammars is already up-to-date!
-[nltk_data]    | Downloading package tagsets to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package tagsets is already up-to-date!
-[nltk_data]    | Downloading package snowball_data to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package snowball_data is already up-to-date!
-[nltk_data]    | Downloading package bllip_wsj_no_aux to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package bllip_wsj_no_aux is already up-to-date!
-[nltk_data]    | Downloading package word2vec_sample to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package word2vec_sample is already up-to-date!
-[nltk_data]    | Downloading package panlex_swadesh to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package panlex_swadesh is already up-to-date!
-[nltk_data]    | Downloading package mte_teip5 to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package mte_teip5 is already up-to-date!
-[nltk_data]    | Downloading package averaged_perceptron_tagger to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package averaged_perceptron_tagger is already up-
-[nltk_data]    |       to-date!
-[nltk_data]    | Downloading package averaged_perceptron_tagger_ru to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package averaged_perceptron_tagger_ru is already
-[nltk_data]    |       up-to-date!
-[nltk_data]    | Downloading package perluniprops to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package perluniprops is already up-to-date!
-[nltk_data]    | Downloading package nonbreaking_prefixes to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package nonbreaking_prefixes is already up-to-date!
-[nltk_data]    | Downloading package vader_lexicon to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package vader_lexicon is already up-to-date!
-[nltk_data]    | Downloading package porter_test to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package porter_test is already up-to-date!
-[nltk_data]    | Downloading package wmt15_eval to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package wmt15_eval is already up-to-date!
-[nltk_data]    | Downloading package mwa_ppdb to
-[nltk_data]    |     /home/mcsa/nltk_data...
-[nltk_data]    |   Package mwa_ppdb is already up-to-date!
-[nltk_data]    | 
-[nltk_data]  Done downloading collection all
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[2]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>True</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>To separate the sentence into words there are several methods.
-<br>The first method is separation by spaces.</p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">my_text</span> <span class="o">=</span> <span class="s2">&quot;Where is St. Paul located? I don&#39;t seem to find it. It isn&#39;t in my map.&quot;</span>
-<span class="n">my_text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span> <span class="c1"># or my_text.split()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">batch_size</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="n">num_past_characters</span> <span class="o">=</span> <span class="mi">10</span> <span class="c1"># The number of previous characters that predict the next character</span>
+<span class="n">step</span> <span class="o">=</span> <span class="mi">1</span>
 </pre></div>
 
 </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[3]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>[&#39;Where&#39;,
- &#39;is&#39;,
- &#39;St.&#39;,
- &#39;Paul&#39;,
- &#39;located?&#39;,
- &#39;I&#39;,
- &#34;don&#39;t&#34;,
- &#39;seem&#39;,
- &#39;to&#39;,
- &#39;find&#39;,
- &#39;it.&#39;,
- &#39;It&#39;,
- &#34;isn&#39;t&#34;,
- &#39;in&#39;,
- &#39;my&#39;,
- &#39;map.&#39;]</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>But this method is not good because there are many cases where it does not work well.
-<br>For example, "Dad went home." The point at the end of the sentence does not belong to the last word, but the above path does not separate the point from the last word.
-<br><br>So we'll use a second method that belongs to nltk, which separates the text into sentences and words correctly.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="#contents">^ Contents</a></p>
-<h2 id="Tokenize">Tokenize<a class="anchor-link" href="#Tokenize">&#182;</a></h2><p><a id='tokenize'></a></p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">nltk.tokenize</span> <span class="k">import</span> <span class="n">word_tokenize</span><span class="p">,</span> <span class="n">sent_tokenize</span>
-<span class="n">sent_tokenize</span><span class="p">(</span><span class="n">my_text</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># A list that holds &quot;representative&quot; for each ASCII value in the text, </span>
+<span class="c1"># that is, if there are ASCII values in the text: 65,65,81,70,81 then this list will hold 65,81,70</span>
+<span class="n">char_mapping</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">all_text</span><span class="p">))</span>
+
+<span class="n">max_char</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">char_mapping</span><span class="p">)</span>
 </pre></div>
 
 </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[4]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>[&#39;Where is St. Paul located?&#39;,
- &#34;I don&#39;t seem to find it.&#34;,
- &#34;It isn&#39;t in my map.&#34;]</pre>
-</div>
-
-</div>
-
 </div>
 </div>
 
@@ -12317,170 +12057,39 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">word_tokenize</span><span class="p">(</span><span class="n">my_text</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">possible_chars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">char_mapping</span><span class="p">)</span> <span class="c1">#The number of different possible text characters</span>
 </pre></div>
 
 </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[5]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>[&#39;Where&#39;,
- &#39;is&#39;,
- &#39;St.&#39;,
- &#39;Paul&#39;,
- &#39;located&#39;,
- &#39;?&#39;,
- &#39;I&#39;,
- &#39;do&#39;,
- &#34;n&#39;t&#34;,
- &#39;seem&#39;,
- &#39;to&#39;,
- &#39;find&#39;,
- &#39;it&#39;,
- &#39;.&#39;,
- &#39;It&#39;,
- &#39;is&#39;,
- &#34;n&#39;t&#34;,
- &#39;in&#39;,
- &#39;my&#39;,
- &#39;map&#39;,
- &#39;.&#39;]</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>In addition, we want to make all words into their basic form.
-For example, walking, walking, and walk are all different rows of walk.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="#contents">^ Contents</a></p>
-<h2 id="Stemmer">Stemmer<a class="anchor-link" href="#Stemmer">&#182;</a></h2><p><a id='stemmer'></a></p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">nltk.stem</span> <span class="k">import</span> <span class="n">PorterStemmer</span>
-<span class="kn">from</span> <span class="nn">nltk.tokenize</span> <span class="k">import</span> <span class="n">word_tokenize</span>
-<span class="n">ps</span> <span class="o">=</span> <span class="n">PorterStemmer</span><span class="p">()</span>
-<span class="n">my_text</span> <span class="o">=</span> <span class="s2">&quot;Whoever eats many cookies is regretting doing so&quot;</span>
-<span class="n">stemmed_sentence</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">word_tokenize</span><span class="p">(</span><span class="n">my_text</span><span class="p">):</span>
-    <span class="n">stemmed_sentence</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ps</span><span class="o">.</span><span class="n">stem</span><span class="p">(</span><span class="n">word</span><span class="p">))</span>
-<span class="n">stemmed_sentence</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">inverse_char_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">max_char</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">possible_chars</span><span class="p">):</span>
+    <span class="n">inverse_char_map</span><span class="p">[</span><span class="n">char_mapping</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">i</span>
 </pre></div>
 
 </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[6]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>[&#39;whoever&#39;, &#39;eat&#39;, &#39;mani&#39;, &#39;cooki&#39;, &#39;is&#39;, &#39;regret&#39;, &#39;do&#39;, &#39;so&#39;]</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>After separating the text into single words and finding the "root" of the word, we would like to know the syntactic role of each of the words in the sentence.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="#contents">^ Contents</a></p>
-<h2 id="Part-of-Speech-Tagging-(POS)">Part of Speech Tagging (POS)<a class="anchor-link" href="#Part-of-Speech-Tagging-(POS)">&#182;</a></h2><p><a id='pos'></a></p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">my_tokenized_text</span> <span class="o">=</span> <span class="n">word_tokenize</span><span class="p">(</span><span class="n">my_text</span><span class="p">)</span>
-<span class="n">nltk</span><span class="o">.</span><span class="n">pos_tag</span><span class="p">(</span><span class="n">my_tokenized_text</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">num_input_examples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">all_text</span><span class="p">)</span><span class="o">-</span><span class="p">(</span><span class="n">num_past_characters</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span><span class="o">/</span><span class="n">step</span><span class="p">)</span>
+<span class="n">curr_batch</span> <span class="o">=</span> <span class="mi">0</span>
 </pre></div>
 
 </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[7]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>[(&#39;Whoever&#39;, &#39;NNP&#39;),
- (&#39;eats&#39;, &#39;VBZ&#39;),
- (&#39;many&#39;, &#39;JJ&#39;),
- (&#39;cookies&#39;, &#39;NNS&#39;),
- (&#39;is&#39;, &#39;VBZ&#39;),
- (&#39;regretting&#39;, &#39;VBG&#39;),
- (&#39;doing&#39;, &#39;VBG&#39;),
- (&#39;so&#39;, &#39;RB&#39;)]</pre>
-</div>
-
-</div>
-
 </div>
 </div>
 
@@ -12489,7 +12098,9 @@ For example, walking, walking, and walk are all different rows of walk.</p>
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The following command shows us all the part of speech tagging.</p>
+<p>Create data for the train.
+<br>In data_x there are $|batch\_size|$ rows in each of them have $|num\_past\_characters|$ characters and each character is represented by the one hot method, meaning that each character is represented by an array of the size of $|possible\_chars|$
+<br>In data_y there are the characters that each of the sentences should predict, which means that each sentence has one character represented in the one hot method, so the size of data_y is $|batch\_size|$ rows and $|possible\_chars|$ columns.</p>
 
 </div>
 </div>
@@ -12499,227 +12110,35 @@ For example, walking, walking, and walk are all different rows of walk.</p>
 <div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">nltk</span><span class="o">.</span><span class="n">help</span><span class="o">.</span><span class="n">upenn_tagset</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">next_batch</span><span class="p">():</span>
+    <span class="k">global</span> <span class="n">curr_batch</span>
+    <span class="n">curr_range_start</span> <span class="o">=</span> <span class="n">curr_batch</span><span class="o">*</span><span class="n">batch_size</span>
+    <span class="k">if</span> <span class="n">curr_range_start</span> <span class="o">+</span> <span class="n">batch_size</span> <span class="o">&gt;=</span> <span class="n">num_input_examples</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">data_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span><span class="n">num_past_characters</span><span class="p">,</span><span class="n">possible_chars</span><span class="p">))</span>
+    <span class="n">data_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span><span class="n">possible_chars</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">ep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">inc</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_past_characters</span><span class="p">):</span>
+            <span class="n">data_x</span><span class="p">[</span><span class="n">ep</span><span class="p">][</span><span class="n">inc</span><span class="p">][</span><span class="n">inverse_char_map</span><span class="p">[</span><span class="n">all_text</span><span class="p">[</span><span class="n">curr_range_start</span><span class="o">+</span><span class="n">ep</span><span class="o">*</span><span class="n">step</span><span class="o">+</span><span class="n">inc</span><span class="p">]]]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">data_y</span><span class="p">[</span><span class="n">ep</span><span class="p">][</span><span class="n">inverse_char_map</span><span class="p">[</span><span class="n">all_text</span><span class="p">[</span><span class="n">curr_range_start</span><span class="o">+</span><span class="n">ep</span><span class="o">*</span><span class="n">step</span><span class="o">+</span><span class="n">num_past_characters</span><span class="p">]]]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">curr_batch</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">data_x</span><span class="p">,</span> <span class="n">data_y</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">back_to_text</span><span class="p">(</span><span class="n">to_convert</span><span class="p">):</span> <span class="c1"># gets a one-hot encoded matrix and returns text. We&#39;ll need this at the end</span>
+    <span class="k">return</span> <span class="p">[</span><span class="nb">chr</span><span class="p">(</span><span class="n">char_mapping</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">letter</span><span class="p">)])</span> <span class="k">for</span> <span class="n">letter</span> <span class="ow">in</span> <span class="n">to_convert</span><span class="p">]</span>
 </pre></div>
 
 </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>$: dollar
-    $ -$ --$ A$ C$ HK$ M$ NZ$ S$ U.S.$ US$
-&#39;&#39;: closing quotation mark
-    &#39; &#39;&#39;
-(: opening parenthesis
-    ( [ {
-): closing parenthesis
-    ) ] }
-,: comma
-    ,
---: dash
-    --
-.: sentence terminator
-    . ! ?
-:: colon or ellipsis
-    : ; ...
-CC: conjunction, coordinating
-    &amp; &#39;n and both but either et for less minus neither nor or plus so
-    therefore times v. versus vs. whether yet
-CD: numeral, cardinal
-    mid-1890 nine-thirty forty-two one-tenth ten million 0.5 one forty-
-    seven 1987 twenty &#39;79 zero two 78-degrees eighty-four IX &#39;60s .025
-    fifteen 271,124 dozen quintillion DM2,000 ...
-DT: determiner
-    all an another any both del each either every half la many much nary
-    neither no some such that the them these this those
-EX: existential there
-    there
-FW: foreign word
-    gemeinschaft hund ich jeux habeas Haementeria Herr K&#39;ang-si vous
-    lutihaw alai je jour objets salutaris fille quibusdam pas trop Monte
-    terram fiche oui corporis ...
-IN: preposition or conjunction, subordinating
-    astride among uppon whether out inside pro despite on by throughout
-    below within for towards near behind atop around if like until below
-    next into if beside ...
-JJ: adjective or numeral, ordinal
-    third ill-mannered pre-war regrettable oiled calamitous first separable
-    ectoplasmic battery-powered participatory fourth still-to-be-named
-    multilingual multi-disciplinary ...
-JJR: adjective, comparative
-    bleaker braver breezier briefer brighter brisker broader bumper busier
-    calmer cheaper choosier cleaner clearer closer colder commoner costlier
-    cozier creamier crunchier cuter ...
-JJS: adjective, superlative
-    calmest cheapest choicest classiest cleanest clearest closest commonest
-    corniest costliest crassest creepiest crudest cutest darkest deadliest
-    dearest deepest densest dinkiest ...
-LS: list item marker
-    A A. B B. C C. D E F First G H I J K One SP-44001 SP-44002 SP-44005
-    SP-44007 Second Third Three Two * a b c d first five four one six three
-    two
-MD: modal auxiliary
-    can cannot could couldn&#39;t dare may might must need ought shall should
-    shouldn&#39;t will would
-NN: noun, common, singular or mass
-    common-carrier cabbage knuckle-duster Casino afghan shed thermostat
-    investment slide humour falloff slick wind hyena override subhumanity
-    machinist ...
-NNP: noun, proper, singular
-    Motown Venneboerger Czestochwa Ranzer Conchita Trumplane Christos
-    Oceanside Escobar Kreisler Sawyer Cougar Yvette Ervin ODI Darryl CTCA
-    Shannon A.K.C. Meltex Liverpool ...
-NNPS: noun, proper, plural
-    Americans Americas Amharas Amityvilles Amusements Anarcho-Syndicalists
-    Andalusians Andes Andruses Angels Animals Anthony Antilles Antiques
-    Apache Apaches Apocrypha ...
-NNS: noun, common, plural
-    undergraduates scotches bric-a-brac products bodyguards facets coasts
-    divestitures storehouses designs clubs fragrances averages
-    subjectivists apprehensions muses factory-jobs ...
-PDT: pre-determiner
-    all both half many quite such sure this
-POS: genitive marker
-    &#39; &#39;s
-PRP: pronoun, personal
-    hers herself him himself hisself it itself me myself one oneself ours
-    ourselves ownself self she thee theirs them themselves they thou thy us
-PRP$: pronoun, possessive
-    her his mine my our ours their thy your
-RB: adverb
-    occasionally unabatingly maddeningly adventurously professedly
-    stirringly prominently technologically magisterially predominately
-    swiftly fiscally pitilessly ...
-RBR: adverb, comparative
-    further gloomier grander graver greater grimmer harder harsher
-    healthier heavier higher however larger later leaner lengthier less-
-    perfectly lesser lonelier longer louder lower more ...
-RBS: adverb, superlative
-    best biggest bluntest earliest farthest first furthest hardest
-    heartiest highest largest least less most nearest second tightest worst
-RP: particle
-    aboard about across along apart around aside at away back before behind
-    by crop down ever fast for forth from go high i.e. in into just later
-    low more off on open out over per pie raising start teeth that through
-    under unto up up-pp upon whole with you
-SYM: symbol
-    % &amp; &#39; &#39;&#39; &#39;&#39;. ) ). * + ,. &lt; = &gt; @ A[fj] U.S U.S.S.R * ** ***
-TO: &#34;to&#34; as preposition or infinitive marker
-    to
-UH: interjection
-    Goodbye Goody Gosh Wow Jeepers Jee-sus Hubba Hey Kee-reist Oops amen
-    huh howdy uh dammit whammo shucks heck anyways whodunnit honey golly
-    man baby diddle hush sonuvabitch ...
-VB: verb, base form
-    ask assemble assess assign assume atone attention avoid bake balkanize
-    bank begin behold believe bend benefit bevel beware bless boil bomb
-    boost brace break bring broil brush build ...
-VBD: verb, past tense
-    dipped pleaded swiped regummed soaked tidied convened halted registered
-    cushioned exacted snubbed strode aimed adopted belied figgered
-    speculated wore appreciated contemplated ...
-VBG: verb, present participle or gerund
-    telegraphing stirring focusing angering judging stalling lactating
-    hankerin&#39; alleging veering capping approaching traveling besieging
-    encrypting interrupting erasing wincing ...
-VBN: verb, past participle
-    multihulled dilapidated aerosolized chaired languished panelized used
-    experimented flourished imitated reunifed factored condensed sheared
-    unsettled primed dubbed desired ...
-VBP: verb, present tense, not 3rd person singular
-    predominate wrap resort sue twist spill cure lengthen brush terminate
-    appear tend stray glisten obtain comprise detest tease attract
-    emphasize mold postpone sever return wag ...
-VBZ: verb, present tense, 3rd person singular
-    bases reconstructs marks mixes displeases seals carps weaves snatches
-    slumps stretches authorizes smolders pictures emerges stockpiles
-    seduces fizzes uses bolsters slaps speaks pleads ...
-WDT: WH-determiner
-    that what whatever which whichever
-WP: WH-pronoun
-    that what whatever whatsoever which who whom whosoever
-WP$: WH-pronoun, possessive
-    whose
-WRB: Wh-adverb
-    how however whence whenever where whereby whereever wherein whereof why
-``: opening quotation mark
-    ` ``
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>After we have seen a way to obtain the syntactic role of each word in the text we can now improve the accuracy of finding the root of the words in the sentence.
-<br>This method is better than stemming but is more complex.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="#contents">^ Contents</a></p>
-<h2 id="Lemmatization">Lemmatization<a class="anchor-link" href="#Lemmatization">&#182;</a></h2><p><a id='lemmatization'></a></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>The WordNetLemmatizer in NLTK uses a shorter list of part of speech tags than the Penn TreeBank, (so we use a short function to make the conversion).</p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">nltk.corpus</span> <span class="k">import</span> <span class="n">wordnet</span> <span class="k">as</span> <span class="n">wn</span>
-
-<span class="k">def</span> <span class="nf">is_noun</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">tag</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;NN&#39;</span><span class="p">,</span> <span class="s1">&#39;NNS&#39;</span><span class="p">,</span> <span class="s1">&#39;NNP&#39;</span><span class="p">,</span> <span class="s1">&#39;NNPS&#39;</span><span class="p">]</span>
-
-<span class="k">def</span> <span class="nf">is_verb</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">tag</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;VB&#39;</span><span class="p">,</span> <span class="s1">&#39;VBD&#39;</span><span class="p">,</span> <span class="s1">&#39;VBG&#39;</span><span class="p">,</span> <span class="s1">&#39;VBN&#39;</span><span class="p">,</span> <span class="s1">&#39;VBP&#39;</span><span class="p">,</span> <span class="s1">&#39;VBZ&#39;</span><span class="p">]</span>
-
-<span class="k">def</span> <span class="nf">is_adverb</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">tag</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;RB&#39;</span><span class="p">,</span> <span class="s1">&#39;RBR&#39;</span><span class="p">,</span> <span class="s1">&#39;RBS&#39;</span><span class="p">]</span>
-
-<span class="k">def</span> <span class="nf">is_adjective</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">tag</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;JJ&#39;</span><span class="p">,</span> <span class="s1">&#39;JJR&#39;</span><span class="p">,</span> <span class="s1">&#39;JJS&#39;</span><span class="p">]</span>
-
-<span class="k">def</span> <span class="nf">penn2wn</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">is_adjective</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">wn</span><span class="o">.</span><span class="n">ADJ</span>
-    <span class="k">elif</span> <span class="n">is_noun</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">wn</span><span class="o">.</span><span class="n">NOUN</span>
-    <span class="k">elif</span> <span class="n">is_adverb</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">wn</span><span class="o">.</span><span class="n">ADV</span>
-    <span class="k">elif</span> <span class="n">is_verb</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">wn</span><span class="o">.</span><span class="n">VERB</span>
-    <span class="k">return</span> <span class="n">wn</span><span class="o">.</span><span class="n">NOUN</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">next_batch</span><span class="p">()</span>
 </pre></div>
 
 </div>
@@ -12732,17 +12151,63 @@ WRB: Wh-adverb
 <div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">nltk.tokenize</span> <span class="k">import</span> <span class="n">word_tokenize</span>
-<span class="kn">from</span> <span class="nn">nltk</span> <span class="k">import</span> <span class="n">pos_tag</span>
-<span class="kn">from</span> <span class="nn">nltk.stem.wordnet</span> <span class="k">import</span> <span class="n">WordNetLemmatizer</span>
-<span class="n">lzr</span> <span class="o">=</span> <span class="n">WordNetLemmatizer</span><span class="p">()</span>
-<span class="n">my_text</span> <span class="o">=</span> <span class="s2">&quot;Whoever eats many cookies is regretting doing so&quot;</span>
-<span class="n">lemed</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="n">pos</span><span class="p">)</span> <span class="ow">in</span> <span class="n">nltk</span><span class="o">.</span><span class="n">pos_tag</span><span class="p">(</span><span class="n">word_tokenize</span><span class="p">(</span><span class="n">my_text</span><span class="p">)):</span>
-    <span class="n">lemed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lzr</span><span class="o">.</span><span class="n">lemmatize</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="n">penn2wn</span><span class="p">(</span><span class="n">pos</span><span class="p">)))</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
 </pre></div>
 
 </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[10]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(15, 10, 84)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[11]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(15, 84)</pre>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -12752,7 +12217,7 @@ WRB: Wh-adverb
 <div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">lemed</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 </pre></div>
 
 </div>
@@ -12771,7 +12236,7 @@ WRB: Wh-adverb
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>[&#39;Whoever&#39;, &#39;eat&#39;, &#39;many&#39;, &#39;cooky&#39;, &#39;be&#39;, &#39;regret&#39;, &#39;do&#39;, &#39;so&#39;]</pre>
+<pre>1.0</pre>
 </div>
 
 </div>
@@ -12779,44 +12244,50 @@ WRB: Wh-adverb
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>After we divided the sentence into words and analyzed them, we now want to find small parts of the sentence called Chunking. These sets of words allow us to treat the word not only as a single word but in a sentence so that we can better understand its context.
-In order to find such groups of words, regular expressions are constructed that represent the structure we want to find.
-<br>For example: "{&lt; DT &gt;? &lt; JJ &gt; * &lt; NN &gt;}"
-This expression means that we are looking for a sentence structure which will appear at most once DT each amount of JJ and once NN.</p>
-<p>To learn about the signs of regular expressions see <a href="https://autohotkey.com/docs/misc/RegEx-QuickRef.htm">link</a></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="#contents">^ Contents</a></p>
-<h2 id="Chunking">Chunking<a class="anchor-link" href="#Chunking">&#182;</a></h2><p><a id='chunking'></a></p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[13]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">my_text</span> <span class="o">=</span> <span class="s2">&quot;Dogs or small cats saw Sara, John, Tom, the pretty girl and the big bat&quot;</span>
-<span class="n">tagged</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">pos_tag</span><span class="p">(</span><span class="n">nltk</span><span class="o">.</span><span class="n">tokenize</span><span class="o">.</span><span class="n">word_tokenize</span><span class="p">(</span><span class="n">my_text</span><span class="p">))</span>
-<span class="n">grammar</span> <span class="o">=</span>   <span class="s2">&quot;&quot;&quot;NP: {&lt;DT&gt;?&lt;JJ&gt;*&lt;NN.?&gt;}</span>
-<span class="s2">                     NounList: {(&lt;NP&gt;&lt;,&gt;?)+&lt;CC&gt;&lt;NP&gt;}&quot;&quot;&quot;</span>
-<span class="n">cp</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">RegexpParser</span><span class="p">(</span><span class="n">grammar</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">tagged</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
 
 </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[13]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]])</pre>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -12826,7 +12297,7 @@ This expression means that we are looking for a sentence structure which will ap
 <div class="prompt input_prompt">In&nbsp;[14]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12839,46 +12310,58 @@ This expression means that we are looking for a sentence structure which will ap
 
 <div class="output_area">
 
-<div class="prompt"></div>
+<div class="prompt output_prompt">Out[14]:</div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>(S
-  (NounList (NP Dogs/NNS) or/CC (NP small/JJ cats/NNS))
-  saw/VBD
-  (NounList
-    (NP Sara/NNP)
-    ,/,
-    (NP John/NNP)
-    ,/,
-    (NP Tom/NNP)
-    ,/,
-    (NP the/DT pretty/JJ girl/NN)
-    and/CC
-    (NP the/DT big/JJ bat/NN)))
-</pre>
-</div>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[42, 44, 31, 32, 27, 29, 31,  1,  1,  1],
+       [44, 31, 32, 27, 29, 31,  1,  1,  1, 45],
+       [31, 32, 27, 29, 31,  1,  1,  1, 45, 47],
+       [32, 27, 29, 31,  1,  1,  1, 45, 47, 42],
+       [27, 29, 31,  1,  1,  1, 45, 47, 42, 42],
+       [29, 31,  1,  1,  1, 45, 47, 42, 42, 41],
+       [31,  1,  1,  1, 45, 47, 42, 42, 41, 45],
+       [ 1,  1,  1, 45, 47, 42, 42, 41, 45, 35],
+       [ 1,  1, 45, 47, 42, 42, 41, 45, 35, 40],
+       [ 1, 45, 47, 42, 42, 41, 45, 35, 40, 33],
+       [45, 47, 42, 42, 41, 45, 35, 40, 33,  4],
+       [47, 42, 42, 41, 45, 35, 40, 33,  4, 75],
+       [42, 42, 41, 45, 35, 40, 33,  4, 75, 63],
+       [42, 41, 45, 35, 40, 33,  4, 75, 63, 56],
+       [41, 45, 35, 40, 33,  4, 75, 63, 56, 75]])</pre>
 </div>
 
 </div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>In order to see the analysis of the chunk in a visual way</p>
 
 </div>
 </div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[15]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">result</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cellsize</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_past_characters</span><span class="p">,</span> <span class="n">possible_chars</span><span class="p">])</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">possible_chars</span><span class="p">])</span>
+
+<span class="n">lstm_cell</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">rnn_cell</span><span class="o">.</span><span class="n">BasicLSTMCell</span><span class="p">(</span><span class="n">cellsize</span><span class="p">,</span> <span class="n">forget_bias</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="n">output</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">dynamic_rnn</span><span class="p">(</span><span class="n">lstm_cell</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+<span class="n">output</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="n">last</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="n">W</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">truncated_normal</span><span class="p">([</span><span class="n">cellsize</span><span class="p">,</span> <span class="n">possible_chars</span><span class="p">],</span> <span class="n">stddev</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="n">possible_chars</span><span class="p">]))</span>
+
+<span class="n">z</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">last</span><span class="p">,</span> <span class="n">W</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+
+<span class="n">cross_entropy</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">y</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">res</span><span class="p">),</span> <span class="n">reduction_indices</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+<span class="n">train_step</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">GradientDescentOptimizer</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">cross_entropy</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12886,33 +12369,30 @@ This expression means that we are looking for a sentence structure which will ap
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>There are cases where the methods we have learned so far are not enough to analyze the sentence because the sentence consists of the terms and names of people, places, organizations, and so on, which are checked only when they refer to the whole phrase together and not each word separately.
-<br>So we will use the following library to more accurately analyze these expressions</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="#contents">^ Contents</a></p>
-<h2 id="Named-Entity-Recognition-(NER)">Named Entity Recognition (NER)<a class="anchor-link" href="#Named-Entity-Recognition-(NER)">&#182;</a></h2><p><a id='ner'></a></p>
-
-</div>
-</div>
-</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[16]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">ne_chunk</span><span class="p">(</span><span class="n">nltk</span><span class="o">.</span><span class="n">pos_tag</span><span class="p">(</span><span class="n">nltk</span><span class="o">.</span><span class="n">word_tokenize</span><span class="p">(</span><span class="s2">&quot;Bill Clinton is the president of the United States&quot;</span><span class="p">)))</span>
-<span class="nb">print</span> <span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sess</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">InteractiveSession</span><span class="p">()</span>
+<span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">global_variables_initializer</span><span class="p">())</span>
+
+<span class="n">correct_prediction</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">res</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">accuracy</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">correct_prediction</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+
+<span class="n">num_of_epochs</span> <span class="o">=</span> <span class="mi">200</span>    
+<span class="k">for</span> <span class="n">ephoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_of_epochs</span><span class="p">):</span>
+    <span class="n">acc</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">curr_batch</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">batch_xs</span><span class="p">,</span> <span class="n">batch_ys</span> <span class="o">=</span> <span class="n">next_batch</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">batch_xs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">train_step</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="n">batch_xs</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">batch_ys</span><span class="p">})</span>
+            <span class="n">acc</span> <span class="o">+=</span> <span class="n">accuracy</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="n">batch_xs</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">batch_ys</span><span class="p">})</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;step </span><span class="si">%d</span><span class="s2">, training accuracy </span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">ephoch</span><span class="p">,</span> <span class="n">acc</span><span class="o">/</span><span class="n">curr_batch</span><span class="p">))</span>
 </pre></div>
 
 </div>
@@ -12929,15 +12409,206 @@ This expression means that we are looking for a sentence structure which will ap
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>(S
-  (PERSON Bill/NNP)
-  (PERSON Clinton/NNP)
-  is/VBZ
-  the/DT
-  president/NN
-  of/IN
-  the/DT
-  (GPE United/NNP States/NNPS))
+<pre>step 0, training accuracy 0.37731
+step 1, training accuracy 0.462628
+step 2, training accuracy 0.488142
+step 3, training accuracy 0.502892
+step 4, training accuracy 0.511578
+step 5, training accuracy 0.517328
+step 6, training accuracy 0.522003
+step 7, training accuracy 0.526037
+step 8, training accuracy 0.529447
+step 9, training accuracy 0.532766
+step 10, training accuracy 0.53553
+step 11, training accuracy 0.537953
+step 12, training accuracy 0.539881
+step 13, training accuracy 0.541593
+step 14, training accuracy 0.54284
+step 15, training accuracy 0.544211
+step 16, training accuracy 0.545166
+step 17, training accuracy 0.546002
+step 18, training accuracy 0.547057
+step 19, training accuracy 0.547824
+step 20, training accuracy 0.548392
+step 21, training accuracy 0.548999
+step 22, training accuracy 0.549583
+step 23, training accuracy 0.550136
+step 24, training accuracy 0.55063
+step 25, training accuracy 0.551269
+step 26, training accuracy 0.551648
+step 27, training accuracy 0.552025
+step 28, training accuracy 0.552595
+step 29, training accuracy 0.552988
+step 30, training accuracy 0.553251
+step 31, training accuracy 0.553356
+step 32, training accuracy 0.553636
+step 33, training accuracy 0.553792
+step 34, training accuracy 0.554205
+step 35, training accuracy 0.554285
+step 36, training accuracy 0.554439
+step 37, training accuracy 0.554719
+step 38, training accuracy 0.554885
+step 39, training accuracy 0.555198
+step 40, training accuracy 0.555388
+step 41, training accuracy 0.555401
+step 42, training accuracy 0.555629
+step 43, training accuracy 0.555686
+step 44, training accuracy 0.555916
+step 45, training accuracy 0.555851
+step 46, training accuracy 0.555869
+step 47, training accuracy 0.556132
+step 48, training accuracy 0.556205
+step 49, training accuracy 0.556437
+step 50, training accuracy 0.556561
+step 51, training accuracy 0.556904
+step 52, training accuracy 0.557059
+step 53, training accuracy 0.557011
+step 54, training accuracy 0.557224
+step 55, training accuracy 0.557062
+step 56, training accuracy 0.557164
+step 57, training accuracy 0.557267
+step 58, training accuracy 0.557274
+step 59, training accuracy 0.557417
+step 60, training accuracy 0.557568
+step 61, training accuracy 0.55768
+step 62, training accuracy 0.557816
+step 63, training accuracy 0.557928
+step 64, training accuracy 0.558011
+step 65, training accuracy 0.557978
+step 66, training accuracy 0.557981
+step 67, training accuracy 0.558142
+step 68, training accuracy 0.558219
+step 69, training accuracy 0.558251
+step 70, training accuracy 0.55843
+step 71, training accuracy 0.558402
+step 72, training accuracy 0.558454
+step 73, training accuracy 0.558292
+step 74, training accuracy 0.558287
+step 75, training accuracy 0.558367
+step 76, training accuracy 0.558557
+step 77, training accuracy 0.558537
+step 78, training accuracy 0.55849
+step 79, training accuracy 0.558588
+step 80, training accuracy 0.558587
+step 81, training accuracy 0.55883
+step 82, training accuracy 0.55848
+step 83, training accuracy 0.558543
+step 84, training accuracy 0.558395
+step 85, training accuracy 0.55851
+step 86, training accuracy 0.558632
+step 87, training accuracy 0.558608
+step 88, training accuracy 0.558608
+step 89, training accuracy 0.558836
+step 90, training accuracy 0.558645
+step 91, training accuracy 0.559054
+step 92, training accuracy 0.558751
+step 93, training accuracy 0.558965
+step 94, training accuracy 0.558891
+step 95, training accuracy 0.558735
+step 96, training accuracy 0.558698
+step 97, training accuracy 0.558948
+step 98, training accuracy 0.559004
+step 99, training accuracy 0.558813
+step 100, training accuracy 0.558732
+step 101, training accuracy 0.558795
+step 102, training accuracy 0.558975
+step 103, training accuracy 0.558973
+step 104, training accuracy 0.558603
+step 105, training accuracy 0.558836
+step 106, training accuracy 0.558953
+step 107, training accuracy 0.559061
+step 108, training accuracy 0.558738
+step 109, training accuracy 0.559118
+step 110, training accuracy 0.559111
+step 111, training accuracy 0.559377
+step 112, training accuracy 0.558855
+step 113, training accuracy 0.559174
+step 114, training accuracy 0.559354
+step 115, training accuracy 0.559251
+step 116, training accuracy 0.559209
+step 117, training accuracy 0.559214
+step 118, training accuracy 0.559211
+step 119, training accuracy 0.55954
+step 120, training accuracy 0.559377
+step 121, training accuracy 0.559562
+step 122, training accuracy 0.559599
+step 123, training accuracy 0.559445
+step 124, training accuracy 0.559645
+step 125, training accuracy 0.55957
+step 126, training accuracy 0.559414
+step 127, training accuracy 0.559607
+step 128, training accuracy 0.559644
+step 129, training accuracy 0.559855
+step 130, training accuracy 0.559725
+step 131, training accuracy 0.559582
+step 132, training accuracy 0.559377
+step 133, training accuracy 0.559712
+step 134, training accuracy 0.55957
+step 135, training accuracy 0.559738
+step 136, training accuracy 0.559887
+step 137, training accuracy 0.559988
+step 138, training accuracy 0.560085
+step 139, training accuracy 0.559996
+step 140, training accuracy 0.560116
+step 141, training accuracy 0.560246
+step 142, training accuracy 0.560043
+step 143, training accuracy 0.560161
+step 144, training accuracy 0.560298
+step 145, training accuracy 0.559973
+step 146, training accuracy 0.560374
+step 147, training accuracy 0.560348
+step 148, training accuracy 0.560374
+step 149, training accuracy 0.560201
+step 150, training accuracy 0.560274
+step 151, training accuracy 0.560361
+step 152, training accuracy 0.560303
+step 153, training accuracy 0.560234
+step 154, training accuracy 0.560314
+step 155, training accuracy 0.560479
+step 156, training accuracy 0.560256
+step 157, training accuracy 0.560396
+step 158, training accuracy 0.560595
+step 159, training accuracy 0.560402
+step 160, training accuracy 0.560536
+step 161, training accuracy 0.560346
+step 162, training accuracy 0.560246
+step 163, training accuracy 0.560331
+step 164, training accuracy 0.560296
+step 165, training accuracy 0.56061
+step 166, training accuracy 0.560652
+step 167, training accuracy 0.560326
+step 168, training accuracy 0.560549
+step 169, training accuracy 0.56062
+step 170, training accuracy 0.560875
+step 171, training accuracy 0.560782
+step 172, training accuracy 0.560532
+step 173, training accuracy 0.560789
+step 174, training accuracy 0.56075
+step 175, training accuracy 0.560532
+step 176, training accuracy 0.560344
+step 177, training accuracy 0.560539
+step 178, training accuracy 0.560867
+step 179, training accuracy 0.560705
+step 180, training accuracy 0.56087
+step 181, training accuracy 0.560667
+step 182, training accuracy 0.560742
+step 183, training accuracy 0.560915
+step 184, training accuracy 0.56067
+step 185, training accuracy 0.560372
+step 186, training accuracy 0.560794
+step 187, training accuracy 0.560474
+step 188, training accuracy 0.56082
+step 189, training accuracy 0.560566
+step 190, training accuracy 0.560391
+step 191, training accuracy 0.560544
+step 192, training accuracy 0.560692
+step 193, training accuracy 0.560615
+step 194, training accuracy 0.560572
+step 195, training accuracy 0.560346
+step 196, training accuracy 0.560301
+step 197, training accuracy 0.560509
+step 198, training accuracy 0.560501
+step 199, training accuracy 0.560504
 </pre>
 </div>
 </div>
@@ -12951,162 +12622,19 @@ This expression means that we are looking for a sentence structure which will ap
 <div class="prompt input_prompt">In&nbsp;[17]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">result</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-</pre></div>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">text2arr</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">start</span><span class="p">):</span>
+    <span class="n">src_as_num</span> <span class="o">=</span> <span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">source</span><span class="p">]</span>
+    <span class="n">ret_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">num_past_characters</span><span class="p">,</span><span class="n">possible_chars</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">inc</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_past_characters</span><span class="p">):</span>
+        <span class="n">ret_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">inc</span><span class="p">][</span><span class="n">inverse_char_map</span><span class="p">[</span><span class="n">src_as_num</span><span class="p">[</span><span class="n">start</span><span class="o">+</span><span class="n">inc</span><span class="p">]]]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">ret_arr</span>
 
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="#contents">^ Contents</a></p>
-<h2 id="N-Grams">N-Grams<a class="anchor-link" href="#N-Grams">&#182;</a></h2><p><a id='n-grams'></a></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Before we go any further, we'll get a bit ahead of the N-Gram function.
-This function creates groups of consecutive words the size of N.
-<br>By creating these sequences we can also get a perspective on the entire context of the word and not just look at the word in itself.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[18]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;It is a simple text this, this is a simple text, is it simple?&quot;</span>
-<span class="nb">list</span><span class="p">(</span><span class="n">nltk</span><span class="o">.</span><span class="n">ngrams</span><span class="p">(</span><span class="n">nltk</span><span class="o">.</span><span class="n">word_tokenize</span><span class="p">(</span><span class="n">text</span><span class="p">),</span><span class="mi">3</span><span class="p">))</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[18]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>[(&#39;It&#39;, &#39;is&#39;, &#39;a&#39;),
- (&#39;is&#39;, &#39;a&#39;, &#39;simple&#39;),
- (&#39;a&#39;, &#39;simple&#39;, &#39;text&#39;),
- (&#39;simple&#39;, &#39;text&#39;, &#39;this&#39;),
- (&#39;text&#39;, &#39;this&#39;, &#39;,&#39;),
- (&#39;this&#39;, &#39;,&#39;, &#39;this&#39;),
- (&#39;,&#39;, &#39;this&#39;, &#39;is&#39;),
- (&#39;this&#39;, &#39;is&#39;, &#39;a&#39;),
- (&#39;is&#39;, &#39;a&#39;, &#39;simple&#39;),
- (&#39;a&#39;, &#39;simple&#39;, &#39;text&#39;),
- (&#39;simple&#39;, &#39;text&#39;, &#39;,&#39;),
- (&#39;text&#39;, &#39;,&#39;, &#39;is&#39;),
- (&#39;,&#39;, &#39;is&#39;, &#39;it&#39;),
- (&#39;is&#39;, &#39;it&#39;, &#39;simple&#39;),
- (&#39;it&#39;, &#39;simple&#39;, &#39;?&#39;)]</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Create-random-story-by-N-Grams">Create random story by N-Grams<a class="anchor-link" href="#Create-random-story-by-N-Grams">&#182;</a></h3><p><a id='create_random_story'></a></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[19]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">urllib</span>
-<span class="kn">from</span> <span class="nn">random</span> <span class="k">import</span> <span class="n">randint</span>
-<span class="n">paragraph_len</span> <span class="o">=</span> <span class="mi">100</span>
-<span class="n">all_text</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="s2">&quot;https://s3.amazonaws.com/text-datasets/nietzsche.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="c1">#for Python 2 remove &quot;request&quot;</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[20]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tokens</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">word_tokenize</span><span class="p">(</span><span class="n">all_text</span><span class="p">)</span>
-<span class="n">my_grams</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nltk</span><span class="o">.</span><span class="n">ngrams</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>random words for the beginning of the story.
-<br>We will execute a 3-gram function on the text.
-<br>We will propose the beginning of the story the first two words and then basically look within all three triangles created by the 3-gram function of the trios that contain the first two parts the last two words added to the story and add the third word from the trio to the array.
-<br>From the array we will select the next word in principle.
-Now we will perform the same actions again, but now we will take the new word that joined the story and the previous word and attached it as the two words we will search for in the triples of the 3-gram.
-<br>We will continue this way as many times as we want (with us it will be paragraph_len times).</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[21]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sentence</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;It&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">]</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[22]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">paragraph_len</span><span class="p">):</span>
-    <span class="n">options</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">trig</span> <span class="ow">in</span> <span class="n">my_grams</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">trig</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">sentence</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="n">trig</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">sentence</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
-            <span class="n">options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trig</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">options</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">sentence</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sentence</span><span class="p">))</span>
+<span class="n">requested_length</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="n">text</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="s2">&quot;hello world&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">requested_length</span><span class="p">):</span>
+    <span class="n">predicted_letter</span> <span class="o">=</span> <span class="n">back_to_text</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">x</span><span class="p">:</span><span class="n">text2arr</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">-</span><span class="n">num_past_characters</span><span class="p">)}))</span>
+    <span class="n">text</span> <span class="o">+=</span> <span class="n">predicted_letter</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
 </pre></div>
 
 </div>
@@ -13123,7 +12651,7 @@ Now we will perform the same actions again, but now we will take the new word th
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>It is highly esteemed one ( for example , are of this contest should always be kept up in sitting still ; and whosoever has experienced any of it would nevertheless remain incontrovertible that of contributing its own eccentricities and sudden outbreaks and that at present sprawls in the distance , so that a certain narrowness , aridity , and with the anxious counsel of physicians , without a sort of INTUITIVE perception , like a gilded , blue , wanton , lightsome , and imperious -- all judgments of its `` intelligible character &#39;&#39; -- In order finally to enjoy life
+<pre>hello world the sense of the sense of the sense of the sense of the sense of the sense of the sense of the sense of the sense of the sense of the sense of the sense of the sense of the sense of the sense of the 
 </pre>
 </div>
 </div>
@@ -13136,361 +12664,8 @@ Now we will perform the same actions again, but now we will take the new word th
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="#contents">^ Contents</a></p>
-<h2 id="Context-Free-Grammar-(CFG)">Context Free-Grammar (CFG)<a class="anchor-link" href="#Context-Free-Grammar-(CFG)">&#182;</a></h2><p><a id='cfg'></a></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>As you have learned in Automatons and Formal Languages. CFG are composed of four components:
-<br>T: terminal vocabulary (the words of the language being defined)
-<br>N: non-terminal vocabulary
-<br>P: a set of productions of the form a -&gt; b, (a is a non-terminal and b is a sequence of one or more symbols from T U V)
-<br>S: the start symbol (member of N)</p>
-<p><br>To read about the Context Free-Grammar, you can read the following <a href="https://en.wikipedia.org/wiki/Context-free_grammar">link</a></p>
-<p><br>As we have done so far, in this method, too, we will want to accept a certain structure of a sentence so that it will be easier for us to analyze it and understand the meaning of each of its parts.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="CFG-Parser">CFG Parser<a class="anchor-link" href="#CFG-Parser">&#182;</a></h3><p><a id='cfg_parser'></a></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Similar to Chunking's search by regular expressions, so we can also find the structure of a sentence by Context Free-Grammar.
-<br>We will note our grammar and seek to find the form of construction of the sentence by the grammar we have given to the system.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[23]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">grammar1</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">CFG</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="s2">&quot;&quot;&quot; </span>
-<span class="s2">S -&gt; NP VP </span>
-<span class="s2">VP -&gt; V NP | V NP PP </span>
-<span class="s2">PP -&gt; P NP </span>
-<span class="s2">V -&gt; &quot;saw&quot; | &quot;ate&quot; | &quot;walked&quot; </span>
-<span class="s2">NP -&gt; &quot;John&quot; | &quot;Mary&quot; | &quot;Bob&quot; | Det N | Det N PP </span>
-<span class="s2">Det -&gt; &quot;a&quot; | &quot;an&quot; | &quot;the&quot; | &quot;my&quot; </span>
-<span class="s2">N -&gt; &quot;man&quot; | &quot;dog&quot; | &quot;cat&quot; | &quot;telescope&quot; | &quot;park&quot; </span>
-<span class="s2">P -&gt; &quot;in&quot; | &quot;on&quot; | &quot;by&quot; | &quot;with&quot; &quot;&quot;&quot;</span><span class="p">)</span>
-<span class="n">sentence</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">word_tokenize</span><span class="p">(</span><span class="s2">&quot;Mary saw Bob&quot;</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[24]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">rd_parser</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">RecursiveDescentParser</span><span class="p">(</span><span class="n">grammar1</span><span class="p">)</span> 
-<span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">rd_parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">sentence</span><span class="p">))[</span><span class="mi">0</span><span class="p">])</span> 
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>(S (NP Mary) (VP (V saw) (NP Bob)))
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[25]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">rd_parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;Mary saw a dog with my telescope&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">()))[</span><span class="mi">0</span><span class="p">])</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>(S
-  (NP Mary)
-  (VP
-    (V saw)
-    (NP (Det a) (N dog) (PP (P with) (NP (Det my) (N telescope))))))
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[26]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">rd_parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;Mary saw a dog with my telescope&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">()))[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>The drawback of the grammatical is that twice there are several ways for the same sentence we will now represent one such case.
-<br>The following sentances are ambigious.</p>
-<table><tr>
-    <td> <img src="Ambiguity_with_CFG_1.png" width="250px"/> </td>
-    <td> <img src="Ambiguity_with_CFG_2.png" width="250px"/> </td>
-</tr></table>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[27]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">groucho_grammar</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">CFG</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">S -&gt; NP VP</span>
-<span class="s2">PP -&gt; P NP</span>
-<span class="s2">NP -&gt; Det N | Det N PP | &#39;I&#39;</span>
-<span class="s2">VP -&gt; V NP | VP PP</span>
-<span class="s2">Det -&gt; &#39;an&#39; | &#39;my&#39;</span>
-<span class="s2">N -&gt; &#39;elephant&#39; | &#39;pajamas&#39;</span>
-<span class="s2">V -&gt; &#39;shot&#39;</span>
-<span class="s2">P -&gt; &#39;in&#39;</span>
-<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
-<span class="n">sent</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;shot&#39;</span><span class="p">,</span> <span class="s1">&#39;an&#39;</span><span class="p">,</span> <span class="s1">&#39;elephant&#39;</span><span class="p">,</span> <span class="s1">&#39;in&#39;</span><span class="p">,</span> <span class="s1">&#39;my&#39;</span><span class="p">,</span> <span class="s1">&#39;pajamas&#39;</span><span class="p">]</span> 
-<span class="n">parser</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">ChartParser</span><span class="p">(</span><span class="n">groucho_grammar</span><span class="p">)</span> 
-<span class="k">for</span> <span class="n">tree</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">sent</span><span class="p">):</span> 
-    <span class="nb">print</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>(S
-  (NP I)
-  (VP
-    (VP (V shot) (NP (Det an) (N elephant)))
-    (PP (P in) (NP (Det my) (N pajamas)))))
-(S
-  (NP I)
-  (VP
-    (V shot)
-    (NP (Det an) (N elephant) (PP (P in) (NP (Det my) (N pajamas))))))
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[29]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tree</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="#contents">^ Contents</a></p>
-<h2 id="CYK-Algorithm">CYK Algorithm<a class="anchor-link" href="#CYK-Algorithm">&#182;</a></h2><p><a id='cykAlgorithm'></a></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<ul>
-<li>The CYK  algorithm which uses dynamic programing is used in order to find a tree (a constituency parse)</li>
-<li>Complexity of the CYK is O( $n^3 |G|$), where n is the length of the sentence, and G is the grammar size.</li>
-<li>We will go over the details in the appendix classes</li>
-</ul>
-<p><br>This method is built as a CFG Parser and has a probability addition to each of the transitions in grammar, in such a way we can see the probability of obtaining a given sentence by the structure of the suggested grammar.
-<br>Now even if there are two options to construct the same sentence, we can choose the more likely option ie the possibility that it has a greater probability</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[30]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">grammar</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">PCFG</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">    S    -&gt; NP VP              [1.0]</span>
-<span class="s2">    VP   -&gt; TV NP              [0.4]</span>
-<span class="s2">    VP   -&gt; IV                 [0.3]</span>
-<span class="s2">    VP   -&gt; DatV NP NP         [0.3]</span>
-<span class="s2">    TV   -&gt; &#39;saw&#39;              [1.0]</span>
-<span class="s2">    IV   -&gt; &#39;ate&#39;              [1.0]</span>
-<span class="s2">    DatV -&gt; &#39;gave&#39;             [1.0]</span>
-<span class="s2">    NP   -&gt; &#39;telescopes&#39;       [0.8]</span>
-<span class="s2">    NP   -&gt; &#39;Jack&#39;             [0.2] &quot;&quot;&quot;</span><span class="p">)</span>
-<span class="n">viterbi_parser</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">ViterbiParser</span><span class="p">(</span><span class="n">grammar</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[31]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">tree</span> <span class="ow">in</span> <span class="n">viterbi_parser</span><span class="o">.</span><span class="n">parse</span><span class="p">([</span><span class="s1">&#39;Jack&#39;</span><span class="p">,</span> <span class="s1">&#39;saw&#39;</span><span class="p">,</span> <span class="s1">&#39;telescopes&#39;</span><span class="p">]):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>(S (NP Jack) (VP (TV saw) (NP telescopes))) (p=0.064)
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="#contents">^ Contents</a></p>
-<h2 id="CoreNLP">CoreNLP<a class="anchor-link" href="#CoreNLP">&#182;</a></h2><p><a id='corenlp'></a></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>CoreNLP is more powerful than NLTK, and includes the following features, which we will examine next:</p>
-<ul>
-<li>A large built-in grammar</li>
-<li>Dependency Parsing </li>
-<li>Coreference Resolution</li>
-</ul>
-<h4 id="A-large-built-in-grammar">A large built-in grammar<a class="anchor-link" href="#A-large-built-in-grammar">&#182;</a></h4><p>We can load grammars into our software. This does not restrict us from remaining with the defaults specified by the directory.</p>
-<h4 id="Dependency-Parsing">Dependency Parsing<a class="anchor-link" href="#Dependency-Parsing">&#182;</a></h4><p>We can check the dependence of another word in the sentence.</p>
-<p>Before you run this code you sould read this <a href="https://stackoverflow.com/questions/7443330/how-do-i-do-dependency-parsing-in-nltk">link</a></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">nltk.parse.stanford</span> <span class="k">import</span> <span class="n">StanfordDependencyParser</span>
-<span class="n">path_to_jar</span> <span class="o">=</span> <span class="s1">&#39;path_to/stanford-parser-full-2014-08-27/stanford-parser.jar&#39;</span>
-<span class="n">path_to_models_jar</span> <span class="o">=</span> <span class="s1">&#39;path_to/stanford-parser-full-2014-08-27/stanford-parser-	3.4.1-models.jar&#39;</span>
-<span class="n">dependency_parser</span> <span class="o">=</span> <span class="n">StanfordDependencyParser</span><span class="p">(</span><span class="n">path_to_jar</span><span class="o">=</span><span class="n">path_to_jar</span><span class="p">,</span> 	<span class="n">path_to_models_jar</span><span class="o">=</span><span class="n">path_to_models_jar</span><span class="p">)</span>
-
-<span class="n">result</span> <span class="o">=</span> <span class="n">dependency_parser</span><span class="o">.</span><span class="n">raw_parse</span><span class="p">(</span><span class="s1">&#39;I shot an elephant in my sleep&#39;</span><span class="p">)</span>
-<span class="n">dep</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
-<span class="nb">list</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">triples</span><span class="p">())</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="Coreference-Resolution">Coreference Resolution<a class="anchor-link" href="#Coreference-Resolution">&#182;</a></h4><p>In our speech we use a lot of references
-For example: The bus was full. <strong>It</strong> blew very fast.</p>
-<p><br>One of the tools that this library gives us is an analysis of these references</p>
+<p>One of the problems caused by predicting text can be that you enter a loop and then the text is duplicated and does not produce new text but repeats existing text. This problem is created once the characters that guess the next character are repeated.
+In order to solve this problem, we will drag the following character according to the softmax returns, which means that a character with a high probability in softmax will be more likely to be the next character, in such a way that the probability of receiving a sequence of characters is the same as the previous ones.</p>
 
 </div>
 </div>
@@ -13500,7 +12675,7 @@ For example: The bus was full. <strong>It</strong> blew very fast.</p>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><a href="#contents">^ Contents</a></p>
-<h2 id="Sentiment-Analysis">Sentiment Analysis<a class="anchor-link" href="#Sentiment-Analysis">&#182;</a></h2><p><a id='sentiment_analysis'></a></p>
+<h3 id="tf.nn.rnn_cell">tf.nn.rnn_cell<a class="anchor-link" href="#tf.nn.rnn_cell">&#182;</a></h3><p><a id='tf.nn.rnn_cell'></a></p>
 
 </div>
 </div>
@@ -13509,147 +12684,73 @@ For example: The bus was full. <strong>It</strong> blew very fast.</p>
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>There are many cases where we want to know the feelings of the sentence, so let us check through as the trial contains negative / positive content.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[32]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">nltk.sentiment.vader</span> <span class="k">import</span> <span class="n">SentimentIntensityAnalyzer</span>
-<span class="n">sna</span> <span class="o">=</span> <span class="n">SentimentIntensityAnalyzer</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">rnn_cell</span><span class="o">.</span><span class="n">BasicLSTMCell</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">num_units</span><span class="p">,</span> <span class="n">forget_bias</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">state_is_tuple</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">tanh</span><span class="p">)</span>
 </pre></div>
+<p>Documentation of the function in this <a href="https://www.tensorflow.org/api_docs/python/tf/nn/rnn_cell/BasicLSTMCell">link</a></p>
 
 </div>
 </div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>In case you get a warning to look at the <a href="https://github.com/nltk/nltk/issues/2053">link</a></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Note: Compound is a normalized value between -1 (negative) to +1 (positive).</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[33]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sna</span><span class="o">.</span><span class="n">polarity_scores</span><span class="p">(</span><span class="s2">&quot;The movie was great!&quot;</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[33]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>{&#39;compound&#39;: 0.6588, &#39;neg&#39;: 0.0, &#39;neu&#39;: 0.406, &#39;pos&#39;: 0.594}</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[34]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sna</span><span class="o">.</span><span class="n">polarity_scores</span><span class="p">(</span><span class="s2">&quot;I liked the book, especially the ending.&quot;</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[34]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>{&#39;compound&#39;: 0.4215, &#39;neg&#39;: 0.0, &#39;neu&#39;: 0.641, &#39;pos&#39;: 0.359}</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[35]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sna</span><span class="o">.</span><span class="n">polarity_scores</span><span class="p">(</span><span class="s2">&quot;The staff were nice, but the food was terrible.&quot;</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[35]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>{&#39;compound&#39;: -0.5023, &#39;neg&#39;: 0.318, &#39;neu&#39;: 0.536, &#39;pos&#39;: 0.146}</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><a href="#contents">^ Contents</a></p>
+<h3 id="Multiple-Layers-Of-RNN">Multiple Layers Of RNN<a class="anchor-link" href="#Multiple-Layers-Of-RNN">&#182;</a></h3><p><a id='multiple_layers_of_rnn'></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>As we could take a single neuron and produce from it a grid with several layers so we can also produce a grid with several layers of RNN which means that all h_i will become x_i of the next layer.</p>
+<p>The code that does this is:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<div class="highlight"><pre><span></span><span class="n">cells_size</span> <span class="o">=</span> <span class="p">[</span><span class="mi">120</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">50</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">get_lstm_dropout</span><span class="p">(</span><span class="n">cellsize</span><span class="p">,</span> <span class="n">dropout</span><span class="p">):</span>
+    <span class="n">lstm_cell</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">rnn_cell</span><span class="o">.</span><span class="n">BasicLSTMCell</span><span class="p">(</span><span class="n">cellsize</span><span class="p">,</span> <span class="n">forget_bias</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span> 
+       <span class="n">dopoutRNN</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">rnn_cell</span><span class="o">.</span><span class="n">DropoutWrapper</span><span class="p">(</span><span class="n">lstm_cell</span> <span class="p">,</span> <span class="n">output_keep_prob</span><span class="o">=</span><span class="n">dropout</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dropoutRNN</span>
+
+<span class="n">rnn_cell</span><span class="o">.</span><span class="n">MultiRNNCell</span><span class="p">([</span><span class="n">get_lstm_dropout</span><span class="p">(</span><span class="n">mem_size</span><span class="p">,</span> <span class="n">dropout</span><span class="p">)</span> <span class="k">for</span> <span class="n">mem_size</span> <span class="ow">in</span> <span class="n">cells_size</span><span class="p">])</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="#contents">^ Contents</a></p>
+<h3 id="BLEU-(Bilingual-Evaluation-Understudy)-ScoreRNN">BLEU (Bilingual Evaluation Understudy) ScoreRNN<a class="anchor-link" href="#BLEU-(Bilingual-Evaluation-Understudy)-ScoreRNN">&#182;</a></h3><p><a id='bleu_scorernn'></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>BLEU is a measure of the quality of translation carried out by machine translation (MT, candidates) in relation to the translation of a professional person (reference sentence), which takes into account the general translation and does not refer to lack of intelligence or grammatical errors in translation.
+This metric is based on a comparison of candidate for the correct translation of the sentence, reference sentence.
+The output is a number between 0 and 1 where as close to 1 means that it is closer to the reference sentence.</p>
+<p>The algorithm:</p>
+<ol>
+<li>Divide the candidate into n-gram units (usually used in 4-gram).</li>
+<li>Sum the number of times each candidate n-gram unit appears in the reference sentence and divide the number of n-gram units in the candidate. (When one unit is checked, the order of the words is not important, but whether or not the words appear)</li>
+</ol>
+<p>Because of the algorithm's method of operation, it will give a higher score to shorter sentences, whereas in many cases the long sentences are correct and therefore we will multiply the result given by the algorithm by $e^{1-r/c}$, r is the total length of all the reference sentences, c is the total length of all the candidates</p>
 
 </div>
 </div>

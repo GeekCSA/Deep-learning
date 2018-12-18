@@ -12497,13 +12497,16 @@ Tensor(&#34;mul_1:0&#34;, shape=(), dtype=int32)
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><strong>x = tf.placeholder(tf.float32, [None, 1])
-<br>y_ = tf.placeholder(tf.float32, [None, 1])</strong></p>
-<p>.
-.
-.</p>
-<p>for _ in range(0,1000):
-<br><strong>sess.run(update, feed<em>dict = {x:[[7.01], [3.02], [4.99], [8.]], y</em>:[[14.01], [6.01], [10.], [16.04]]})</strong></p>
+<div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">y_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+<span class="o">.</span>
+<span class="o">.</span>
+<span class="o">.</span>
+
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000</span><span class="p">):</span>
+<span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">update</span><span class="p">,</span> <span class="n">feed_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="p">:[[</span><span class="mf">7.01</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.02</span><span class="p">],</span> <span class="p">[</span><span class="mf">4.99</span><span class="p">],</span> <span class="p">[</span><span class="mf">8.</span><span class="p">]],</span> <span class="n">y_</span><span class="p">:[[</span><span class="mf">14.01</span><span class="p">],</span> <span class="p">[</span><span class="mf">6.01</span><span class="p">],</span> <span class="p">[</span><span class="mf">10.</span><span class="p">],</span> <span class="p">[</span><span class="mf">16.04</span><span class="p">]]})</span>
+</pre></div>
 
 </div>
 </div>
@@ -12525,9 +12528,10 @@ Tensor(&#34;mul_1:0&#34;, shape=(), dtype=int32)
 <p>We can use tensorflow.train.Saver to save the data and weights we get during the run.
 <br>This help us to resume training.</p>
 <p>A good practice is to save checkpoints every X updates.</p>
-<p>saver = tf.train.Saver()
-<br>saver.save(sess, filename)
-<br>saver.restore(sess, filename)</p>
+<div class="highlight"><pre><span></span><span class="n">saver</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">Saver</span><span class="p">()</span>
+<span class="n">saver</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+<span class="n">saver</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+</pre></div>
 <p>If you want to see more <a href="https://www.easy-tensorflow.com/tf-tutorials/basics/save-and-restore">link</a></p>
 <p>We will demonstrate the use of these commands in one of the previous examples.</p>
 
@@ -12677,8 +12681,9 @@ b =  [3.9046898]
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>TensorBoard can help visualize the built graph along with presenting different charts.</p>
 <p>To create a graph.
-<br>The function gets a path for store the graph and the session
-<br>tf.summary.FileWriter('./my_graph', sess.graph)</p>
+<br>The function gets a path for store the graph and the session</p>
+<div class="highlight"><pre><span></span><span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">FileWriter</span><span class="p">(</span><span class="s1">&#39;./my_graph&#39;</span><span class="p">,</span> <span class="n">sess</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+</pre></div>
 <p>In order to open the browser of graph (at <a href="http://0.0.0.0:8008/#graphs">http://0.0.0.0:8008/#graphs</a>)
 write at the terminal.</p>
 
@@ -12689,7 +12694,8 @@ write at the terminal.</p>
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>$ tensorboard --port=8008 --logdir ./my_graph/</p>
+<div class="highlight"><pre><span></span>tensorboard --port<span class="o">=</span><span class="m">8008</span> --logdir ./my_graph/
+</pre></div>
 
 </div>
 </div>
@@ -12698,8 +12704,9 @@ write at the terminal.</p>
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In order to give a name to graph 
-<br>m = tf.Variable(&lt; data &gt;, name=&lt; graphName &gt;)</p>
+<p>In order to give a name to graph</p>
+<div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="o">&lt;</span><span class="n">data</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">graphName</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
 
 </div>
 </div>
